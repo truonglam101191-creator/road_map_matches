@@ -13,7 +13,7 @@ A premium, responsive, and highly customizable generic tournament bracket (road 
     <table align="center">
       <tr>
         <td align="center">
-          <img src="https://raw.githubusercontent.com/truonglam101191-creator/road_map_matches/main/screenshots/custom_layout1.png" alt="Custom Layout 1" width="220"/>
+          <img src="https://raw.githubusercontent.com/truonglam101191-creator/road_map_matches/main/screenshots/custom_layout1.gif" alt="Custom Layout 1" width="220"/>
           <br/><b>Premium Dark</b>
         </td>
         <!-- <td align="center">
