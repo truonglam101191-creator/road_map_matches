@@ -2,6 +2,33 @@
 
 A premium, responsive, and highly customizable generic tournament bracket (road map) library for Flutter. It supports dynamic infinite rounds, interactive swipe navigation, customizable branch layouts, and high-performance glowing victory connection lines.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/truonglam101191-creator/road_map_matches/main/screenshots/demo.gif" alt="Interactive Swipe & Tab Navigation Demo" width="300" />
+  <img src="https://raw.githubusercontent.com/truonglam101191-creator/road_map_matches/main/screenshots/demo1.png" alt="Light/Dark Premium Themes" width="300" />
+</p>
+
+<details>
+  <summary>📸 Click to view more screenshots (Grid Layout)</summary>
+  <p align="center">
+    <table align="center">
+      <tr>
+        <td align="center">
+          <img src="https://raw.githubusercontent.com/truonglam101191-creator/road_map_matches/main/screenshots/custom_layout1.png" alt="Custom Layout 1" width="220"/>
+          <br/><b>Premium Dark</b>
+        </td>
+        <!-- <td align="center">
+          <img src="https://raw.githubusercontent.com/truonglam101191-creator/road_map_matches/main/screenshots/custom_layout2.png" alt="Custom Layout 2" width="220"/>
+          <br/><b>Checked-in & QR</b>
+        </td>
+        <td align="center">
+          <img src="https://raw.githubusercontent.com/truonglam101191-creator/road_map_matches/main/screenshots/custom_layout3.png" alt="Custom Layout 3" width="220"/>
+          <br/><b>Dynamic Gaps</b>
+        </td> -->
+      </tr>
+    </table>
+  </p>
+</details>
+
 ---
 
 ## Features
