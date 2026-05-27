@@ -164,9 +164,9 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: const Icon(
               Icons.emoji_events,
@@ -194,17 +194,17 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF10162B).withOpacity(0.9),
+          color: const Color(0xFF10162B).withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isFinal
-                ? const Color(0xFFFFB300).withOpacity(0.4)
-                : Colors.white.withOpacity(0.06),
+                ? const Color(0xFFFFB300).withValues(alpha: 0.4)
+                : Colors.white.withValues(alpha: 0.06),
             width: isFinal ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 4,
               offset: const Offset(0, 3),
             ),
@@ -218,7 +218,7 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
               Container(
                 height: 18,
                 color: isFinal
-                    ? const Color(0xFFFFB300).withOpacity(0.1)
+                    ? const Color(0xFFFFB300).withValues(alpha: 0.1)
                     : const Color(0xFF141C35),
                 padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Row(
@@ -232,7 +232,7 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                       decoration: BoxDecoration(
                         color: isFinal
                             ? const Color(0xFFFFB300)
-                            : const Color(0xFF0066FF).withOpacity(0.2),
+                            : const Color(0xFF0066FF).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(3),
                       ),
                       child: Text(
@@ -249,14 +249,14 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                     Text(
                       match.table,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                         fontSize: 7.5,
                       ),
                     ),
                     Text(
                       match.time,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                         fontSize: 7.5,
                       ),
                     ),
@@ -282,7 +282,7 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                       ),
                       Container(
                         height: 0.5,
-                        color: Colors.white.withOpacity(0.04),
+                        color: Colors.white.withValues(alpha: 0.04),
                       ),
                       _buildPlayerRow(
                         match.player2,
@@ -314,7 +314,7 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
           height: 16,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.04),
+            color: Colors.white.withValues(alpha: 0.04),
             shape: BoxShape.circle,
           ),
           child: Text(player.flag, style: const TextStyle(fontSize: 10)),
@@ -327,10 +327,10 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: player.isWalkOver
-                  ? Colors.white.withOpacity(0.25)
+                  ? Colors.white.withValues(alpha: 0.25)
                   : isWinner
                   ? Colors.white
-                  : Colors.white.withOpacity(0.55),
+                  : Colors.white.withValues(alpha: 0.55),
               fontSize: 9.5,
               fontWeight: isWinner ? FontWeight.w800 : FontWeight.w500,
               fontStyle: player.isWalkOver
@@ -347,13 +347,13 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
             decoration: BoxDecoration(
               color: isWinner
                   ? const Color(0xFF0066FF)
-                  : Colors.white.withOpacity(0.03),
+                  : Colors.white.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(3),
             ),
             child: Text(
               '$score',
               style: TextStyle(
-                color: isWinner ? Colors.white : Colors.white.withOpacity(0.35),
+                color: isWinner ? Colors.white : Colors.white.withValues(alpha: 0.35),
                 fontSize: 9.5,
                 fontWeight: isWinner ? FontWeight.w900 : FontWeight.normal,
               ),
@@ -373,7 +373,7 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
           });
         },
         child: Container(
-          color: Colors.black.withOpacity(0.7),
+          color: Colors.black.withValues(alpha: 0.7),
           alignment: Alignment.center,
           child: GestureDetector(
             onTap: () {},
@@ -385,12 +385,12 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                   width: 320,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF131A30).withOpacity(0.9),
+                    color: const Color(0xFF131A30).withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.45),
+                        color: Colors.black.withValues(alpha: 0.45),
                         blurRadius: 25,
                         spreadRadius: 4,
                       ),
@@ -489,7 +489,7 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
         Text(
           title,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             fontSize: 7.5,
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
@@ -518,13 +518,13 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: isWinner
-            ? const Color(0xFF0066FF).withOpacity(0.12)
-            : Colors.white.withOpacity(0.02),
+            ? const Color(0xFF0066FF).withValues(alpha: 0.12)
+            : Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isWinner
-              ? const Color(0xFF0066FF).withOpacity(0.3)
-              : Colors.white.withOpacity(0.05),
+              ? const Color(0xFF0066FF).withValues(alpha: 0.3)
+              : Colors.white.withValues(alpha: 0.05),
         ),
       ),
       child: Row(
@@ -534,7 +534,7 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
             height: 28,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
             child: Text(player.flag, style: const TextStyle(fontSize: 15)),

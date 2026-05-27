@@ -125,7 +125,7 @@ class BracketPainter<T> extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final activeGlowPaint = Paint()
-      ..color = primaryColor.withOpacity(0.15)
+      ..color = primaryColor.withValues(alpha: 0.15)
       ..strokeWidth = 8.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -227,9 +227,7 @@ class BracketPainter<T> extends CustomPainter {
       }
 
       if (isTopActive) {
-        if (activeGlowPaint != null) {
-          canvas.drawPath(topPath, activeGlowPaint);
-        }
+        canvas.drawPath(topPath, activeGlowPaint);
         canvas.drawPath(topPath, activePaint);
       } else {
         canvas.drawPath(topPath, defaultPaint);
@@ -255,9 +253,7 @@ class BracketPainter<T> extends CustomPainter {
       }
 
       if (isBottomActive) {
-        if (activeGlowPaint != null) {
-          canvas.drawPath(bottomPath, activeGlowPaint);
-        }
+        canvas.drawPath(bottomPath, activeGlowPaint);
         canvas.drawPath(bottomPath, activePaint);
       } else {
         canvas.drawPath(bottomPath, defaultPaint);
@@ -270,9 +266,7 @@ class BracketPainter<T> extends CustomPainter {
 
       final bool isChildActive = isTopActive || isBottomActive;
       if (isChildActive) {
-        if (activeGlowPaint != null) {
-          canvas.drawPath(sharedPath, activeGlowPaint);
-        }
+        canvas.drawPath(sharedPath, activeGlowPaint);
         canvas.drawPath(sharedPath, activePaint);
       } else {
         canvas.drawPath(sharedPath, defaultPaint);
@@ -329,21 +323,6 @@ class BracketPainter<T> extends CustomPainter {
         defaultPaint,
       );
     }
-  }
-
-  void _drawStepLine(
-    Canvas canvas,
-    double x1,
-    double y1,
-    double x2,
-    double y2,
-    Paint paint,
-    Paint? glowPaint,
-  ) {
-    if (glowPaint != null) {
-      canvas.drawLine(Offset(x1, y1), Offset(x2, y2), glowPaint);
-    }
-    canvas.drawLine(Offset(x1, y1), Offset(x2, y2), paint);
   }
 
   @override
@@ -551,7 +530,7 @@ class _AnimatedTournamentBracketState<T>
                 center: const Alignment(0.0, -0.5),
                 radius: 1.2,
                 colors: [
-                  widget.backgroundColor.withOpacity(0.85),
+                  widget.backgroundColor.withValues(alpha: 0.85),
                   widget.backgroundColor,
                 ],
               ),
@@ -701,9 +680,9 @@ class _AnimatedTournamentBracketState<T>
         height: 42,
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: widget.surfaceColor.withOpacity(0.6),
+          color: widget.surfaceColor.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -724,7 +703,7 @@ class _AnimatedTournamentBracketState<T>
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: widget.primaryColor.withOpacity(0.3),
+                          color: widget.primaryColor.withValues(alpha: 0.3),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -881,12 +860,12 @@ class _AnimatedTournamentBracketState<T>
             width: 240,
             height: 48,
             decoration: BoxDecoration(
-              color: widget.surfaceColor.withOpacity(0.8),
+              color: widget.surfaceColor.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 4),
                 ),
@@ -904,9 +883,9 @@ class _AnimatedTournamentBracketState<T>
                   bottom: 4,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.08),
+                      color: Colors.white.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(26),
-                      border: Border.all(color: Colors.white.withOpacity(0.08)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                     ),
                   ),
                 ),
