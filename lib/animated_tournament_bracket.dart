@@ -1,22 +1,28 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
+/// Enum representing the execution status of a match based on the tournament workflow.
+enum MatchStatus { scheduled, inProgress, completed, dispute }
+
 /// Convenience model representing a player in a tournament (can be used as a default).
 class Player {
   final String name;
   final String flag;
   final bool isWalkOver;
+  final bool isCheckedIn; // QR check-in status
 
   const Player({
     required this.name,
     required this.flag,
     this.isWalkOver = false,
+    this.isCheckedIn = false,
   });
 
   static const walkOver = Player(
     name: 'Walk Over',
     flag: '👤',
     isWalkOver: true,
+    isCheckedIn: false,
   );
 }
 
@@ -30,6 +36,7 @@ class MatchModel {
   final Player player2;
   final int score1;
   final int score2;
+  final MatchStatus status; // Match execution status
 
   const MatchModel({
     required this.id,
@@ -40,10 +47,15 @@ class MatchModel {
     required this.player2,
     required this.score1,
     required this.score2,
+    this.status = MatchStatus.scheduled,
   });
 
   bool get hasWinner =>
-      score1 != 0 || score2 != 0 || player1.isWalkOver || player2.isWalkOver;
+      status == MatchStatus.completed ||
+      score1 != 0 ||
+      score2 != 0 ||
+      player1.isWalkOver ||
+      player2.isWalkOver;
 
   Player get winner {
     if (player1.isWalkOver && !player2.isWalkOver) return player2;
@@ -61,11 +73,15 @@ class BracketPainter<T> extends CustomPainter {
   final double verticalGap;
   final double topOffset;
   final List<List<T>> branchRounds;
-  final T finalMatch;
+  final T? finalMatch;
   final double pageOffset;
   final Color primaryColor;
   final Color defaultLineColor;
   final double connectorRadius;
+  final double lineThickness;
+  final double activeLineThickness;
+  final double activeGlowWidth;
+  final double activeGlowOpacity;
 
   // Optional connection line highlighting callbacks
   final bool Function(T match)? hasWinner;
@@ -85,6 +101,10 @@ class BracketPainter<T> extends CustomPainter {
     required this.primaryColor,
     required this.defaultLineColor,
     required this.connectorRadius,
+    required this.lineThickness,
+    required this.activeLineThickness,
+    required this.activeGlowWidth,
+    required this.activeGlowOpacity,
     this.hasWinner,
     this.getWinnerName,
     this.getPlayer1Name,
@@ -92,8 +112,8 @@ class BracketPainter<T> extends CustomPainter {
   });
 
   double getActiveY(int round, int index) {
-    final numRounds = branchRounds.length + 1;
-    if (round == numRounds - 1) {
+    final numRounds = branchRounds.length + (finalMatch != null ? 1 : 0);
+    if (finalMatch != null && round == numRounds - 1) {
       return getActiveY(round - 1, 0);
     }
     if (round == 0) {
@@ -114,19 +134,19 @@ class BracketPainter<T> extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final defaultPaint = Paint()
       ..color = defaultLineColor
-      ..strokeWidth = 2.0
+      ..strokeWidth = lineThickness
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final activePaint = Paint()
       ..color = primaryColor
-      ..strokeWidth = 3.0
+      ..strokeWidth = activeLineThickness
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final activeGlowPaint = Paint()
-      ..color = primaryColor.withValues(alpha: 0.15)
-      ..strokeWidth = 8.0
+      ..color = primaryColor.withValues(alpha: activeGlowOpacity)
+      ..strokeWidth = activeGlowWidth
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
@@ -142,15 +162,17 @@ class BracketPainter<T> extends CustomPainter {
       );
     }
 
-    _drawFinalConnection(
-      canvas,
-      branchRounds.length - 1,
-      branchRounds.last,
-      finalMatch,
-      defaultPaint,
-      activePaint,
-      activeGlowPaint,
-    );
+    if (finalMatch != null) {
+      _drawFinalConnection(
+        canvas,
+        branchRounds.length - 1,
+        branchRounds.last,
+        finalMatch as T,
+        defaultPaint,
+        activePaint,
+        activeGlowPaint,
+      );
+    }
   }
 
   void _drawRoundConnections(
@@ -170,6 +192,9 @@ class BracketPainter<T> extends CustomPainter {
     final midX = startX + horizontalGap / 2;
 
     for (int j = 0; j < nextRound.length; j++) {
+      if (j * 2 >= currentRound.length || j * 2 + 1 >= currentRound.length) {
+        continue;
+      }
       final childMatch = nextRound[j];
       final parentMatch1 = currentRound[j * 2];
       final parentMatch2 = currentRound[j * 2 + 1];
@@ -337,7 +362,11 @@ class BracketPainter<T> extends CustomPainter {
         oldDelegate.finalMatch != finalMatch ||
         oldDelegate.primaryColor != primaryColor ||
         oldDelegate.defaultLineColor != defaultLineColor ||
-        oldDelegate.connectorRadius != connectorRadius;
+        oldDelegate.connectorRadius != connectorRadius ||
+        oldDelegate.lineThickness != lineThickness ||
+        oldDelegate.activeLineThickness != activeLineThickness ||
+        oldDelegate.activeGlowWidth != activeGlowWidth ||
+        oldDelegate.activeGlowOpacity != activeGlowOpacity;
   }
 }
 
@@ -346,11 +375,8 @@ class AnimatedTournamentBracket<T> extends StatefulWidget {
   /// Rounds list for the first branch (Upper).
   final List<List<T>> branch1Rounds;
 
-  /// Rounds list for the second branch (Lower, optional).
-  final List<List<T>>? branch2Rounds;
-
   /// The final championship match that connects the branch winners.
-  final T grandFinal;
+  final T? grandFinal;
 
   /// Custom Card layout builder. EXTREMELY powerful for complete custom interfaces.
   final Widget Function(BuildContext context, T match) itemBuilder;
@@ -381,10 +407,6 @@ class AnimatedTournamentBracket<T> extends StatefulWidget {
   final String Function(T match)? getPlayer1Name;
   final String Function(T match)? getPlayer2Name;
 
-  /// Branch labels
-  final String upperBranchLabel;
-  final String lowerBranchLabel;
-
   /// Design system theme colors
   final Color primaryColor;
   final Color secondaryColor;
@@ -396,12 +418,31 @@ class AnimatedTournamentBracket<T> extends StatefulWidget {
   /// The radius for connection line corners. Defaults to 8.0 (subtle).
   final double connectorRadius;
 
+  /// Optional custom layout parameters.
+  final double? cardWidth;
+  final double? cardHeight;
+  final double? horizontalGap;
+  final double verticalGap;
+  final double topOffset;
+
+  /// Custom connection line styling properties.
+  final double lineThickness;
+  final double activeLineThickness;
+  final double activeGlowWidth;
+  final double activeGlowOpacity;
+
+  /// Custom Tab Bar styling properties.
+  final Color? tabBarBorderColor;
+  final Color? tabBarBackgroundColor;
+  final double tabBarBorderRadius;
+  final Decoration? tabBarIndicatorDecoration;
+  final double tabBarHeight;
+
   const AnimatedTournamentBracket({
     super.key,
     required this.branch1Rounds,
-    required this.grandFinal,
+    this.grandFinal,
     required this.itemBuilder,
-    this.branch2Rounds,
     this.roundTitles,
     this.tabBuilder,
     this.tabBarBuilder,
@@ -409,8 +450,6 @@ class AnimatedTournamentBracket<T> extends StatefulWidget {
     this.getWinnerName,
     this.getPlayer1Name,
     this.getPlayer2Name,
-    this.upperBranchLabel = 'NHÁNH TRÊN',
-    this.lowerBranchLabel = 'NHÁNH DƯỚI',
     this.primaryColor = const Color(0xFF0066FF),
     this.secondaryColor = const Color(0xFF00E5FF),
     this.backgroundColor = const Color(0xFF070B19),
@@ -418,6 +457,20 @@ class AnimatedTournamentBracket<T> extends StatefulWidget {
     this.accentColor = const Color(0xFFFFB300),
     this.defaultLineColor = const Color(0x33FFFFFF),
     this.connectorRadius = 8.0,
+    this.cardWidth,
+    this.cardHeight,
+    this.horizontalGap,
+    this.verticalGap = 16.0,
+    this.topOffset = 25.0,
+    this.lineThickness = 2.0,
+    this.activeLineThickness = 3.0,
+    this.activeGlowWidth = 8.0,
+    this.activeGlowOpacity = 0.15,
+    this.tabBarBorderColor,
+    this.tabBarBackgroundColor,
+    this.tabBarBorderRadius = 12.0,
+    this.tabBarIndicatorDecoration,
+    this.tabBarHeight = 42.0,
   });
 
   @override
@@ -432,11 +485,11 @@ class _AnimatedTournamentBracketState<T>
   late final CurvedAnimation _snapAnimation;
   double _pageOffset = 0.0;
   int _activeRound = 0;
-  int _activeBranch = 0; // 0 for branch1 (Upper), 1 for branch2 (Lower)
   double _snapStartOffset = 0.0;
   double _snapTargetOffset = 0.0;
 
-  int get numRounds => widget.branch1Rounds.length + 1;
+  int get numRounds =>
+      widget.branch1Rounds.length + (widget.grandFinal != null ? 1 : 0);
 
   @override
   void initState() {
@@ -475,7 +528,7 @@ class _AnimatedTournamentBracketState<T>
     double verticalGap,
     double topOffset,
   ) {
-    if (round == numRounds - 1) {
+    if (widget.grandFinal != null && round == numRounds - 1) {
       return getActiveY(
         round - 1,
         0,
@@ -515,9 +568,7 @@ class _AnimatedTournamentBracketState<T>
 
   @override
   Widget build(BuildContext context) {
-    final branchRounds = _activeBranch == 0 || widget.branch2Rounds == null
-        ? widget.branch1Rounds
-        : widget.branch2Rounds!;
+    final branchRounds = widget.branch1Rounds;
     final finalMatch = widget.grandFinal;
 
     return Stack(
@@ -557,19 +608,24 @@ class _AnimatedTournamentBracketState<T>
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final double cardWidth = constraints.maxWidth * 0.89;
-                    final double cardHeight = cardWidth / 2.5;
-                    final double horizontalGap = constraints.maxWidth * 0.12;
-                    final double verticalGap = 16.0;
-                    final double topOffset = 25.0;
+                    final double cardWidth =
+                        widget.cardWidth ?? (constraints.maxWidth * 0.89);
+                    final double cardHeight =
+                        widget.cardHeight ?? (cardWidth / 2.5);
+                    final double horizontalGap =
+                        widget.horizontalGap ?? (constraints.maxWidth * 0.12);
+                    final double verticalGap = widget.verticalGap;
+                    final double topOffset = widget.topOffset;
 
                     final double colWidth = cardWidth + horizontalGap;
                     final double canvasWidth = colWidth * numRounds + 40;
 
                     final heights = List.generate(numRounds, (colIndex) {
-                      final int itemCount = colIndex < numRounds - 1
-                          ? branchRounds[colIndex].length
-                          : 1;
+                      final int itemCount =
+                          (widget.grandFinal != null &&
+                              colIndex == numRounds - 1)
+                          ? 1
+                          : branchRounds[colIndex].length;
                       return itemCount * cardHeight +
                           (itemCount - 1).clamp(0, itemCount) * verticalGap +
                           topOffset +
@@ -577,6 +633,9 @@ class _AnimatedTournamentBracketState<T>
                     });
 
                     double getActiveContentHeight(double pageOffset) {
+                      if (numRounds <= 1) {
+                        return heights.isNotEmpty ? heights[0] : 0.0;
+                      }
                       int i = pageOffset.floor().clamp(0, numRounds - 2);
                       double t = pageOffset - i;
                       return lerpDouble(heights[i], heights[i + 1], t)!;
@@ -651,15 +710,6 @@ class _AnimatedTournamentBracketState<T>
             ],
           ),
         ),
-
-        // Branch Switcher at bottom (only if double branches are provided!)
-        if (widget.branch2Rounds != null)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 24,
-            child: _buildBranchSelector(),
-          ),
       ],
     );
   }
@@ -677,12 +727,18 @@ class _AnimatedTournamentBracketState<T>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
-        height: 42,
+        height: widget.tabBarHeight,
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: widget.surfaceColor.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          color:
+              widget.tabBarBackgroundColor ??
+              widget.surfaceColor.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(widget.tabBarBorderRadius),
+          border: Border.all(
+            color:
+                widget.tabBarBorderColor ??
+                Colors.white.withValues(alpha: 0.05),
+          ),
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -696,19 +752,29 @@ class _AnimatedTournamentBracketState<T>
                   bottom: 0,
                   width: tabWidth,
                   child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [widget.primaryColor, widget.secondaryColor],
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: widget.primaryColor.withValues(alpha: 0.3),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
+                    decoration:
+                        widget.tabBarIndicatorDecoration ??
+                        BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              widget.primaryColor,
+                              widget.secondaryColor,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            (widget.tabBarBorderRadius - 4).clamp(
+                              0.0,
+                              double.infinity,
+                            ),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: widget.primaryColor.withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
                   ),
                 ),
 
@@ -757,7 +823,7 @@ class _AnimatedTournamentBracketState<T>
 
   Widget _buildAnimatedBracketCanvas({
     required List<List<T>> branchRounds,
-    required T finalMatch,
+    required T? finalMatch,
     required double cardWidth,
     required double cardHeight,
     required double horizontalGap,
@@ -794,6 +860,10 @@ class _AnimatedTournamentBracketState<T>
                         primaryColor: widget.primaryColor,
                         defaultLineColor: widget.defaultLineColor,
                         connectorRadius: widget.connectorRadius,
+                        lineThickness: widget.lineThickness,
+                        activeLineThickness: widget.activeLineThickness,
+                        activeGlowWidth: widget.activeGlowWidth,
+                        activeGlowOpacity: widget.activeGlowOpacity,
                         hasWinner: widget.hasWinner,
                         getWinnerName: widget.getWinnerName,
                         getPlayer1Name: widget.getPlayer1Name,
@@ -802,7 +872,7 @@ class _AnimatedTournamentBracketState<T>
                     ),
                   ),
                   // Dynamic Cards for all rounds except the Grand Final
-                  ...List.generate(numRounds - 1, (roundIndex) {
+                  ...List.generate(branchRounds.length, (roundIndex) {
                     final roundMatches = branchRounds[roundIndex];
                     return List.generate(roundMatches.length, (matchIndex) {
                       final match = roundMatches[matchIndex];
@@ -825,125 +895,27 @@ class _AnimatedTournamentBracketState<T>
                   }).expand((widgets) => widgets),
 
                   // Final Card
-                  Positioned(
-                    left: (numRounds - 1) * colWidth,
-                    top:
-                        getActiveY(
-                          numRounds - 1,
-                          0,
-                          _pageOffset,
-                          cardHeight,
-                          verticalGap,
-                          topOffset,
-                        ) -
-                        cardHeight / 2,
-                    width: cardWidth,
-                    height: cardHeight,
-                    child: widget.itemBuilder(context, finalMatch),
-                  ),
+                  if (finalMatch != null)
+                    Positioned(
+                      left: (numRounds - 1) * colWidth,
+                      top:
+                          getActiveY(
+                            numRounds - 1,
+                            0,
+                            _pageOffset,
+                            cardHeight,
+                            verticalGap,
+                            topOffset,
+                          ) -
+                          cardHeight / 2,
+                      width: cardWidth,
+                      height: cardHeight,
+                      child: widget.itemBuilder(context, finalMatch),
+                    ),
                 ],
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBranchSelector() {
-    return Center(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            width: 240,
-            height: 48,
-            decoration: BoxDecoration(
-              color: widget.surfaceColor.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // Sliding highlight
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.fastOutSlowIn,
-                  left: 4 + (_activeBranch * 114.0),
-                  top: 4,
-                  width: 114,
-                  bottom: 4,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(26),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                    ),
-                  ),
-                ),
-
-                // Labels
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _activeBranch = 0;
-                          });
-                        },
-                        behavior: HitTestBehavior.opaque,
-                        child: Center(
-                          child: Text(
-                            widget.upperBranchLabel,
-                            style: TextStyle(
-                              color: _activeBranch == 0
-                                  ? Colors.white
-                                  : Colors.white30,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _activeBranch = 1;
-                          });
-                        },
-                        behavior: HitTestBehavior.opaque,
-                        child: Center(
-                          child: Text(
-                            widget.lowerBranchLabel,
-                            style: TextStyle(
-                              color: _activeBranch == 1
-                                  ? Colors.white
-                                  : Colors.white30,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

@@ -1,4 +1,4 @@
-# read_map_matches
+# road_map
 
 A premium, responsive, and highly customizable generic tournament bracket (road map) library for Flutter. It supports dynamic infinite rounds, interactive swipe navigation, customizable branch layouts, and high-performance glowing victory connection lines.
 
@@ -10,18 +10,17 @@ A premium, responsive, and highly customizable generic tournament bracket (road 
 - 💫 **Glowing Victory Connectors**: Draws orthogonal connection lines between rounds with configurable active/inactive state and glowing highlight paths.
 - 📱 **Interactive Swipe & Tab Navigation**: Swipe horizontally or tap tabs with premium sliding indicator to navigate rounds effortlessly.
 - ⚡ **Highly Customizable**: Complete control over round tab labels, theme colors, connector corner radius, and match card widgets.
-- 🔄 **Double Branches Layout**: Built-in support for multiple branches (e.g. Upper & Lower brackets) with a dynamic bottom selector.
 - 🎨 **Adaptive Layout**: Smoothly morphs vertical alignments to support infinite rounds without overflow.
 
 ---
 
 ## Installation
 
-Add `read_map_matches` to your `pubspec.yaml` dependencies:
+Add `road_map` to your `pubspec.yaml` dependencies:
 
 ```yaml
 dependencies:
-  read_map_matches: ^1.0.0
+  road_map: ^1.0.0
 ```
 
 Then run:
@@ -62,7 +61,7 @@ class MyMatch {
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:read_map_matches/read_map_matches.dart';
+import 'package:road_map/road_map.dart';
 
 class TournamentBracketScreen extends StatelessWidget {
   @override
@@ -127,9 +126,8 @@ class TournamentBracketScreen extends StatelessWidget {
 | Parameter | Type | Description |
 |---|---|---|
 | `branch1Rounds` | `List<List<T>>` | Required. List of rounds containing matches of type `T` for the primary branch (e.g. Upper Branch). |
-| `grandFinal` | `T` | Required. The ultimate championship match connecting the branch winners. |
+| `grandFinal` | `T?` | Optional. The ultimate championship match connecting the branch winners. |
 | `itemBuilder` | `Widget Function(BuildContext, T)` | Required. Callback builder to construct your custom match card widgets. |
-| `branch2Rounds` | `List<List<T>>?` | Optional. Secondary branch rounds (e.g. Lower Branch) to support double elimination brackets. |
 | `roundTitles` | `List<String>?` | Optional. Custom names for each round tab (e.g. `['Round 1', 'Quarter-Finals', ...]`). |
 | `tabBuilder` | `Widget Function(BuildContext, int, bool)?` | Optional. Callback to build highly custom tab labels. |
 | `hasWinner` | `bool Function(T)?` | Optional. Returns whether a match has concluded with a winner. |
@@ -141,6 +139,20 @@ class TournamentBracketScreen extends StatelessWidget {
 | `secondaryColor` | `Color` | Accent highlight color. Defaults to `#00E5FF`. |
 | `backgroundColor` | `Color` | Overall background gradient starting color. Defaults to `#070B19`. |
 | `surfaceColor` | `Color` | Tab bar background fill color. Defaults to `#131A30`. |
+| `cardWidth` | `double?` | Custom card width (defaults to dynamic calculation if null). |
+| `cardHeight` | `double?` | Custom card height (defaults to dynamic calculation if null). |
+| `horizontalGap` | `double?` | Custom horizontal gap between rounds (defaults to dynamic calculation if null). |
+| `verticalGap` | `double` | Custom vertical gap between cards in the same round. Defaults to `16.0`. |
+| `topOffset` | `double` | Custom top offset for drawing the bracket. Defaults to `25.0`. |
+| `lineThickness` | `double` | Default connection line thickness. Defaults to `2.0`. |
+| `activeLineThickness` | `double` | Active connection line thickness. Defaults to `3.0`. |
+| `activeGlowWidth` | `double` | Active connection line glow width. Defaults to `8.0`. |
+| `activeGlowOpacity` | `double` | Active connection line glow opacity. Defaults to `0.15`. |
+| `tabBarBorderColor` | `Color?` | Custom border color for the round tabs. Defaults to `Colors.white.withValues(alpha: 0.05)`. |
+| `tabBarBackgroundColor` | `Color?` | Custom background color for the round tabs. Defaults to `surfaceColor.withValues(alpha: 0.6)`. |
+| `tabBarBorderRadius` | `double` | Custom border radius for the round tabs container. Defaults to `12.0`. |
+| `tabBarIndicatorDecoration` | `Decoration?` | Custom decoration for the sliding round tab indicator. |
+| `tabBarHeight` | `double` | Custom height of the round tabs bar. Defaults to `42.0`. |
 
 ---
 

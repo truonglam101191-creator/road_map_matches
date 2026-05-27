@@ -1,4 +1,4 @@
-import 'package:read_map_matches/animated_tournament_bracket.dart';
+import 'package:road_map/animated_tournament_bracket.dart';
 
 class BracketData {
   // Tab 1: Upper Bracket Matches
@@ -18,10 +18,11 @@ class BracketData {
       label: 'Match 2',
       table: 'Table 1',
       time: 'Sat 10:18 PM',
-      player1: Player(name: 'Billy Thorpe', flag: '🇺🇸'),
-      player2: Player(name: 'Skyler Woodward', flag: '🇺🇸'),
+      player1: Player(name: 'Billy Thorpe', flag: '🇺🇸', isCheckedIn: true),
+      player2: Player(name: 'Skyler Woodward', flag: '🇺🇸', isCheckedIn: true),
       score1: 1,
       score2: 7,
+      status: MatchStatus.inProgress,
     ),
     MatchModel(
       id: 3,
@@ -32,6 +33,7 @@ class BracketData {
       player2: Player(name: 'Justin Sajich', flag: '🇦🇺'),
       score1: 3,
       score2: 7,
+      status: MatchStatus.dispute,
     ),
     MatchModel(
       id: 4,

@@ -139,7 +139,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.1"
-  read_map_matches:
+  road_map:
     dependency: "direct main"
     description:
       path: ".."

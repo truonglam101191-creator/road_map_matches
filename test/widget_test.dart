@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:read_map_matches/read_map_matches.dart';
+import 'package:road_map/road_map.dart';
 
 void main() {
   group('Player & MatchModel Unit Tests', () {
@@ -112,7 +112,6 @@ void main() {
 
     Widget buildTestBracket({
       required List<List<MatchModel>> branchRounds,
-      List<List<MatchModel>>? branch2Rounds,
       List<String>? roundTitles,
       Widget Function(BuildContext, int, bool)? tabBuilder,
     }) {
@@ -120,7 +119,6 @@ void main() {
         home: Scaffold(
           body: AnimatedTournamentBracket<MatchModel>(
             branch1Rounds: branchRounds,
-            branch2Rounds: branch2Rounds,
             grandFinal: grandFinal,
             roundTitles: roundTitles,
             tabBuilder: tabBuilder,
@@ -203,44 +201,6 @@ void main() {
 
       expect(find.text('CUSTOM-0'), findsOneWidget);
       expect(find.text('CUSTOM-1'), findsOneWidget);
-    });
-
-    testWidgets('Supports branch switching when branch2 is provided', (
-      WidgetTester tester,
-    ) async {
-      const lowerMatch = MatchModel(
-        id: 10,
-        label: 'Lower Semi',
-        table: 'T3',
-        time: '13:00',
-        player1: Player(name: 'Lower Player 1', flag: '🇺🇸'),
-        player2: Player(name: 'Lower Player 2', flag: '🇬🇧'),
-        score1: 4,
-        score2: 10,
-      );
-
-      await tester.pumpWidget(
-        buildTestBracket(
-          branchRounds: singleBranchRounds,
-          branch2Rounds: [
-            [lowerMatch],
-          ],
-        ),
-      );
-
-      // Initially, shows branch 1 (Upper Branch)
-      expect(find.text('David Alcaide'), findsOneWidget);
-      expect(find.text('Lower Player 1'), findsNothing);
-
-      // Find and tap the Branch Selector (Lower Branch button)
-      // The default labels are 'NHÁNH TRÊN' and 'NHÁNH DƯỚI'
-      expect(find.text('NHÁNH DƯỚI'), findsOneWidget);
-      await tester.tap(find.text('NHÁNH DƯỚI'));
-      await tester.pumpAndSettle();
-
-      // Now should show branch 2 (Lower Branch)
-      expect(find.text('Lower Player 1'), findsOneWidget);
-      expect(find.text('David Alcaide'), findsNothing);
     });
   });
 }

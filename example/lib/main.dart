@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'bracket_data.dart';
-import 'package:read_map_matches/animated_tournament_bracket.dart';
+import 'package:road_map/animated_tournament_bracket.dart';
 
 void main() {
   runApp(const MyApp());
@@ -55,15 +55,10 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                   child: AnimatedTournamentBracket<MatchModel>(
                     branch1Rounds: const [
                       BracketData.round1Tab1,
+                      BracketData.round1Tab1,
                       BracketData.round2Tab1,
                       BracketData.round3Tab1,
                       BracketData.round4Tab1,
-                    ],
-                    branch2Rounds: const [
-                      BracketData.round1Tab2,
-                      BracketData.round2Tab2,
-                      BracketData.round3Tab2,
-                      BracketData.round4Tab2,
                     ],
                     grandFinal: BracketData.grandFinal,
 
@@ -95,7 +90,9 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                             const SizedBox(width: 3),
                           ],
                           Text(
-                            titles[index],
+                            index < titles.length
+                                ? titles[index]
+                                : 'Round ${index + 1}',
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.white54,
                               fontWeight: FontWeight.bold,
@@ -197,10 +194,19 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
           color: const Color(0xFF10162B).withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isFinal
+            color: match.status == MatchStatus.dispute
+                ? Colors.redAccent.withValues(alpha: 0.6)
+                : match.status == MatchStatus.inProgress
+                ? const Color(0xFF00E5FF).withValues(alpha: 0.5)
+                : isFinal
                 ? const Color(0xFFFFB300).withValues(alpha: 0.4)
                 : Colors.white.withValues(alpha: 0.06),
-            width: isFinal ? 1.5 : 1,
+            width:
+                match.status == MatchStatus.dispute ||
+                    match.status == MatchStatus.inProgress ||
+                    isFinal
+                ? 1.5
+                : 1,
           ),
           boxShadow: [
             BoxShadow(
@@ -217,35 +223,119 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
               // Pill tag bar
               Container(
                 height: 18,
-                color: isFinal
+                color: match.status == MatchStatus.dispute
+                    ? Colors.redAccent.withValues(alpha: 0.15)
+                    : match.status == MatchStatus.inProgress
+                    ? const Color(0xFF00E5FF).withValues(alpha: 0.1)
+                    : isFinal
                     ? const Color(0xFFFFB300).withValues(alpha: 0.1)
                     : const Color(0xFF141C35),
                 padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 1,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isFinal
-                            ? const Color(0xFFFFB300)
-                            : const Color(0xFF0066FF).withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: Text(
-                        match.label,
-                        style: TextStyle(
-                          color: isFinal
-                              ? Colors.black
-                              : const Color(0xFF82B1FF),
-                          fontSize: 7.5,
-                          fontWeight: FontWeight.bold,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isFinal
+                                ? const Color(0xFFFFB300)
+                                : const Color(
+                                    0xFF0066FF,
+                                  ).withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: Text(
+                            match.label,
+                            style: TextStyle(
+                              color: isFinal
+                                  ? Colors.black
+                                  : const Color(0xFF82B1FF),
+                              fontSize: 7.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                      ),
+                        if (match.status == MatchStatus.dispute) ...[
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(3),
+                              border: Border.all(
+                                color: Colors.redAccent.withValues(alpha: 0.3),
+                                width: 0.5,
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.warning,
+                                  size: 7,
+                                  color: Colors.redAccent,
+                                ),
+                                SizedBox(width: 2),
+                                Text(
+                                  'TRANH CHẤP',
+                                  style: TextStyle(
+                                    color: Colors.redAccent,
+                                    fontSize: 6.5,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (match.status == MatchStatus.inProgress) ...[
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(
+                                0xFF00E5FF,
+                              ).withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 4,
+                                  height: 4,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF00E5FF),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                const Text(
+                                  'LIVE',
+                                  style: TextStyle(
+                                    color: Color(0xFF00E5FF),
+                                    fontSize: 6.5,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
+
                     Text(
                       match.table,
                       style: TextStyle(
@@ -321,22 +411,32 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
         ),
         const SizedBox(width: 6),
         Expanded(
-          child: Text(
-            player.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: player.isWalkOver
-                  ? Colors.white.withValues(alpha: 0.25)
-                  : isWinner
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.55),
-              fontSize: 9.5,
-              fontWeight: isWinner ? FontWeight.w800 : FontWeight.w500,
-              fontStyle: player.isWalkOver
-                  ? FontStyle.italic
-                  : FontStyle.normal,
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  player.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: player.isWalkOver
+                        ? Colors.white.withValues(alpha: 0.25)
+                        : isWinner
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.55),
+                    fontSize: 9.5,
+                    fontWeight: isWinner ? FontWeight.w800 : FontWeight.w500,
+                    fontStyle: player.isWalkOver
+                        ? FontStyle.italic
+                        : FontStyle.normal,
+                  ),
+                ),
+              ),
+              if (player.isCheckedIn) ...[
+                const SizedBox(width: 4),
+                const Icon(Icons.verified, size: 9, color: Colors.greenAccent),
+              ],
+            ],
           ),
         ),
         if (!player.isWalkOver)
@@ -353,7 +453,9 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
             child: Text(
               '$score',
               style: TextStyle(
-                color: isWinner ? Colors.white : Colors.white.withValues(alpha: 0.35),
+                color: isWinner
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.35),
                 fontSize: 9.5,
                 fontWeight: isWinner ? FontWeight.w900 : FontWeight.normal,
               ),
@@ -387,7 +489,9 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF131A30).withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.45),
@@ -447,6 +551,23 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                             Icons.access_time_filled,
                             match.time,
                             'SCHEDULE',
+                          ),
+                          _buildDetailMeta(
+                            match.status == MatchStatus.dispute
+                                ? Icons.warning
+                                : match.status == MatchStatus.inProgress
+                                ? Icons.play_arrow
+                                : match.status == MatchStatus.completed
+                                ? Icons.check_circle
+                                : Icons.schedule,
+                            match.status == MatchStatus.dispute
+                                ? 'Disputed'
+                                : match.status == MatchStatus.inProgress
+                                ? 'Live Scoring'
+                                : match.status == MatchStatus.completed
+                                ? 'Completed'
+                                : 'Scheduled',
+                            'MATCH STATUS',
                           ),
                         ],
                       ),
@@ -544,16 +665,61 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  player.name,
-                  style: TextStyle(
-                    color: player.isWalkOver ? Colors.white24 : Colors.white,
-                    fontSize: 12,
-                    fontWeight: isWinner ? FontWeight.w900 : FontWeight.w600,
-                    fontStyle: player.isWalkOver
-                        ? FontStyle.italic
-                        : FontStyle.normal,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      player.name,
+                      style: TextStyle(
+                        color: player.isWalkOver
+                            ? Colors.white24
+                            : Colors.white,
+                        fontSize: 12,
+                        fontWeight: isWinner
+                            ? FontWeight.w900
+                            : FontWeight.w600,
+                        fontStyle: player.isWalkOver
+                            ? FontStyle.italic
+                            : FontStyle.normal,
+                      ),
+                    ),
+                    if (player.isCheckedIn) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.greenAccent.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: Colors.greenAccent.withValues(alpha: 0.3),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check,
+                              size: 7,
+                              color: Colors.greenAccent,
+                            ),
+                            SizedBox(width: 2),
+                            Text(
+                              'CHECKED-IN',
+                              style: TextStyle(
+                                color: Colors.greenAccent,
+                                fontSize: 6,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 if (isWinner && !player.isWalkOver)
                   Padding(

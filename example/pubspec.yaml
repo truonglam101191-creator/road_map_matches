@@ -1,5 +1,5 @@
-name: read_map_matches_example
-description: An example application demonstrating the usage of the read_map_matches tournament bracket package.
+name: road_map_example
+description: An example application demonstrating the usage of the road_map tournament bracket package.
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -13,7 +13,7 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # Path dependency pointing to the parent tournament bracket library!
-  read_map_matches:
+  road_map:
     path: ../
 
 dev_dependencies:
