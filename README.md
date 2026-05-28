@@ -175,6 +175,17 @@ class TournamentBracketScreen extends StatelessWidget {
 | `activeLineThickness` | `double` | Active connection line thickness. Defaults to `3.0`. |
 | `activeGlowWidth` | `double` | Active connection line glow width. Defaults to `8.0`. |
 | `activeGlowOpacity` | `double` | Active connection line glow opacity. Defaults to `0.15`. |
+| `connectorStyle` | `ConnectorStyle` | The design style of connecting lines: `ConnectorStyle.curved`, `ConnectorStyle.sharp`, or `ConnectorStyle.straight`. Defaults to `ConnectorStyle.curved`. |
+| `lineType` | `ConnectorLineType` | Choose line animation style: `ConnectorLineType.solid` or `ConnectorLineType.flowing` (moving dashes). Defaults to `ConnectorLineType.solid`. |
+| `dashLength` | `double` | Length of active dashes in flowing lines. Defaults to `12.0`. |
+| `dashGap` | `double` | Gap between active dashes in flowing lines. Defaults to `8.0`. |
+| `dashSpeedMultiplier` | `double` | Speed multiplier for the flowing animation. Defaults to `1.0`. |
+| `searchHighlightQuery` | `String?` | Competitor name query. If set, connector lines along paths containing this competitor name are highlighted with `accentColor`. |
+| `accentColor` | `Color` | Highlight color used for matching searched competitor paths. Defaults to `#FFB300`. |
+| `pulseGlow` | `bool` | Whether to enable pulsing glow effect animations on active lines. Defaults to `true`. |
+| `pulseDuration` | `Duration` | Speed/duration of the pulsing animation loop. Defaults to `Duration(seconds: 2)`. |
+| `useLineGradients` | `bool` | Whether to apply a premium color gradient transition (`primaryColor` -> `secondaryColor`) to active connector paths. Defaults to `true`. |
+| `roundHeaderBuilder` | `Widget Function(BuildContext, int)?` | Optional callback to build and render custom column headers directly above each round in the bracket canvas. |
 | `tabBarBorderColor` | `Color?` | Custom border color for the round tabs. Defaults to `Colors.white.withValues(alpha: 0.05)`. |
 | `tabBarBackgroundColor` | `Color?` | Custom background color for the round tabs. Defaults to `surfaceColor.withValues(alpha: 0.6)`. |
 | `tabBarBorderRadius` | `double` | Custom border radius for the round tabs container. Defaults to `12.0`. |

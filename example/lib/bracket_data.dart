@@ -37,7 +37,10 @@ class BracketData {
       label: 'Match 2',
       table: 'Table 1',
       time: 'Sat 10:18 PM',
-      competitors: [Player(name: 'Billy Thorpe', flag: '🇺🇸', isCheckedIn: true), Player(name: 'Skyler Woodward', flag: '🇺🇸', isCheckedIn: true)],
+      competitors: [
+        Player(name: 'Billy Thorpe', flag: '🇺🇸', isCheckedIn: true),
+        Player(name: 'Skyler Woodward', flag: '🇺🇸', isCheckedIn: true),
+      ],
       scores: [1, 7],
       status: MatchStatus.inProgress,
     ),
@@ -46,7 +49,10 @@ class BracketData {
       label: 'Match 3',
       table: 'Table 1',
       time: 'Sat 06:43 PM',
-      competitors: [Player(name: 'Kelly Fisher', flag: '🇬🇧'), Player(name: 'Justin Sajich', flag: '🇦🇺')],
+      competitors: [
+        Player(name: 'Kelly Fisher', flag: '🇬🇧'),
+        Player(name: 'Justin Sajich', flag: '🇦🇺'),
+      ],
       scores: [3, 7],
       status: MatchStatus.dispute,
     ),
@@ -73,7 +79,10 @@ class BracketData {
       label: 'Match 6',
       table: 'Table 1',
       time: 'Sat 07:59 PM',
-      competitors: [Player(name: 'Eklent Kaçi', flag: '🇦🇱'), Player(name: 'Petri Makkonen', flag: '🇫🇮')],
+      competitors: [
+        Player(name: 'Eklent Kaçi', flag: '🇦🇱'),
+        Player(name: 'Petri Makkonen', flag: '🇫🇮'),
+      ],
       scores: [7, 3],
     ),
     MatchModel(
@@ -81,7 +90,10 @@ class BracketData {
       label: 'Match 7',
       table: 'Table 1',
       time: 'Sun 12:11 PM',
-      competitors: [Player(name: 'Niels Feijen', flag: '🇳🇱'), Player(name: 'Jeffrey De Luna', flag: '🇵🇭')],
+      competitors: [
+        Player(name: 'Niels Feijen', flag: '🇳🇱'),
+        Player(name: 'Jeffrey De Luna', flag: '🇵🇭'),
+      ],
       scores: [7, 3],
     ),
     MatchModel(
@@ -100,7 +112,10 @@ class BracketData {
       label: 'Match 17',
       table: 'Table 1',
       time: 'Sun 10:20 PM',
-      competitors: [Player(name: 'David Alcaide Bermudez', flag: '🇪🇸'), Player(name: 'Skyler Woodward', flag: '🇺🇸')],
+      competitors: [
+        Player(name: 'David Alcaide Bermudez', flag: '🇪🇸'),
+        Player(name: 'Skyler Woodward', flag: '🇺🇸'),
+      ],
       scores: [3, 7],
     ),
     MatchModel(
@@ -108,7 +123,10 @@ class BracketData {
       label: 'Match 18',
       table: 'Table 1',
       time: 'Mon 06:35 PM',
-      competitors: [Player(name: 'Justin Sajich', flag: '🇦🇺'), Player(name: 'Alex Kazakis', flag: '🇬🇷')],
+      competitors: [
+        Player(name: 'Justin Sajich', flag: '🇦🇺'),
+        Player(name: 'Alex Kazakis', flag: '🇬🇷'),
+      ],
       scores: [3, 7],
     ),
     MatchModel(
@@ -116,7 +134,10 @@ class BracketData {
       label: 'Match 19',
       table: 'Table 1',
       time: 'Sun 08:42 PM',
-      competitors: [Player(name: 'Naoyuki Oi', flag: '🇯🇵'), Player(name: 'Eklent Kaçi', flag: '🇦🇱')],
+      competitors: [
+        Player(name: 'Naoyuki Oi', flag: '🇯🇵'),
+        Player(name: 'Eklent Kaçi', flag: '🇦🇱'),
+      ],
       scores: [5, 7],
     ),
     MatchModel(
@@ -124,7 +145,10 @@ class BracketData {
       label: 'Match 20',
       table: 'Table 1',
       time: 'Mon 03:49 PM',
-      competitors: [Player(name: 'Niels Feijen', flag: '🇳🇱'), Player(name: 'Jayson Shaw', flag: '🇬🇧')],
+      competitors: [
+        Player(name: 'Niels Feijen', flag: '🇳🇱'),
+        Player(name: 'Jayson Shaw', flag: '🇬🇧'),
+      ],
       scores: [7, 6],
     ),
   ];
@@ -135,7 +159,10 @@ class BracketData {
       label: 'Match 25',
       table: 'Table 1',
       time: 'Tue 03:42 PM',
-      competitors: [Player(name: 'Skyler Woodward', flag: '🇺🇸'), Player(name: 'Alex Kazakis', flag: '🇬🇷')],
+      competitors: [
+        Player(name: 'Skyler Woodward', flag: '🇺🇸'),
+        Player(name: 'Alex Kazakis', flag: '🇬🇷'),
+      ],
       scores: [3, 7],
     ),
     MatchModel(
@@ -143,7 +170,10 @@ class BracketData {
       label: 'Match 26',
       table: 'Table 1',
       time: 'Mon 09:06 PM',
-      competitors: [Player(name: 'Eklent Kaçi', flag: '🇦🇱'), Player(name: 'Niels Feijen', flag: '🇳🇱')],
+      competitors: [
+        Player(name: 'Eklent Kaçi', flag: '🇦🇱'),
+        Player(name: 'Niels Feijen', flag: '🇳🇱'),
+      ],
       scores: [7, 0],
     ),
   ];
@@ -154,7 +184,10 @@ class BracketData {
       label: 'Match 29',
       table: 'Table 1',
       time: 'Tue 06:44 PM',
-      competitors: [Player(name: 'Alex Kazakis', flag: '🇬🇷'), Player(name: 'Eklent Kaçi', flag: '🇦🇱')],
+      competitors: [
+        Player(name: 'Alex Kazakis', flag: '🇬🇷'),
+        Player(name: 'Eklent Kaçi', flag: '🇦🇱'),
+      ],
       scores: [7, 6],
     ),
   ];
@@ -175,7 +208,10 @@ class BracketData {
       label: 'Match 10',
       table: 'Table 1',
       time: 'Sun 06:57 PM',
-      competitors: [Player(name: 'Shane Van Boening', flag: '🇺🇸'), Player(name: 'Jakub Koniar', flag: '🇸🇰')],
+      competitors: [
+        Player(name: 'Shane Van Boening', flag: '🇺🇸'),
+        Player(name: 'Jakub Koniar', flag: '🇸🇰'),
+      ],
       scores: [7, 4],
     ),
     MatchModel(
@@ -183,7 +219,10 @@ class BracketData {
       label: 'Match 11',
       table: 'Table 1',
       time: 'Sun 01:16 PM',
-      competitors: [Player(name: 'Mieszko Fortuński', flag: '🇵🇱'), Player(name: 'Kristina Tkach', flag: '🇷🇺')],
+      competitors: [
+        Player(name: 'Mieszko Fortuński', flag: '🇵🇱'),
+        Player(name: 'Kristina Tkach', flag: '🇷🇺'),
+      ],
       scores: [7, 2],
     ),
     MatchModel(
@@ -209,7 +248,10 @@ class BracketData {
       label: 'Match 14',
       table: 'Table 1',
       time: 'Sat 09:08 PM',
-      competitors: [Player(name: 'Chris Melling', flag: '🇬🇧'), Player(name: 'Sanjin Pehlivanovic', flag: '🇧🇦')],
+      competitors: [
+        Player(name: 'Chris Melling', flag: '🇬🇧'),
+        Player(name: 'Sanjin Pehlivanovic', flag: '🇧🇦'),
+      ],
       scores: [7, 4],
     ),
     MatchModel(
@@ -217,7 +259,10 @@ class BracketData {
       label: 'Match 15',
       table: 'Table 1',
       time: 'Sun 02:28 PM',
-      competitors: [Player(name: 'Denis Grabe', flag: '🇪🇪'), Player(name: 'Roberto Gomez', flag: '🇵🇭')],
+      competitors: [
+        Player(name: 'Denis Grabe', flag: '🇪🇪'),
+        Player(name: 'Roberto Gomez', flag: '🇵🇭'),
+      ],
       scores: [7, 6],
     ),
     MatchModel(
@@ -237,7 +282,10 @@ class BracketData {
       label: 'Match 21',
       table: 'Table 1',
       time: 'Mon 07:54 PM',
-      competitors: [Player(name: 'Fedor Gorst', flag: '🇷🇺'), Player(name: 'Shane Van Boening', flag: '🇺🇸')],
+      competitors: [
+        Player(name: 'Fedor Gorst', flag: '🇷🇺'),
+        Player(name: 'Shane Van Boening', flag: '🇺🇸'),
+      ],
       scores: [1, 7],
     ),
     MatchModel(
@@ -245,7 +293,10 @@ class BracketData {
       label: 'Match 22',
       table: 'Table 1',
       time: 'Mon 12:59 PM',
-      competitors: [Player(name: 'Mieszko Fortuński', flag: '🇵🇱'), Player(name: 'Max Lechner', flag: '🇦🇹')],
+      competitors: [
+        Player(name: 'Mieszko Fortuński', flag: '🇵🇱'),
+        Player(name: 'Max Lechner', flag: '🇦🇹'),
+      ],
       scores: [5, 7],
     ),
     MatchModel(
@@ -253,7 +304,10 @@ class BracketData {
       label: 'Match 23',
       table: 'Table 1',
       time: 'Sun 04:11 PM',
-      competitors: [Player(name: 'Joshua Filler', flag: '🇩🇪'), Player(name: 'Chris Melling', flag: '🇬🇧')],
+      competitors: [
+        Player(name: 'Joshua Filler', flag: '🇩🇪'),
+        Player(name: 'Chris Melling', flag: '🇬🇧'),
+      ],
       scores: [7, 5],
     ),
     MatchModel(
@@ -261,7 +315,10 @@ class BracketData {
       label: 'Match 24',
       table: 'Table 1',
       time: 'Mon 02:28 PM',
-      competitors: [Player(name: 'Denis Grabe', flag: '🇪🇪'), Player(name: 'Albin Ouschan', flag: '🇦🇹')],
+      competitors: [
+        Player(name: 'Denis Grabe', flag: '🇪🇪'),
+        Player(name: 'Albin Ouschan', flag: '🇦🇹'),
+      ],
       scores: [7, 3],
     ),
   ];
@@ -272,7 +329,10 @@ class BracketData {
       label: 'Match 27',
       table: 'Table 1',
       time: 'Tue 02:27 PM',
-      competitors: [Player(name: 'Shane Van Boening', flag: '🇺🇸'), Player(name: 'Max Lechner', flag: '🇦🇹')],
+      competitors: [
+        Player(name: 'Shane Van Boening', flag: '🇺🇸'),
+        Player(name: 'Max Lechner', flag: '🇦🇹'),
+      ],
       scores: [7, 4],
     ),
     MatchModel(
@@ -280,7 +340,10 @@ class BracketData {
       label: 'Match 28',
       table: 'Table 1',
       time: 'Tue 01:09 PM',
-      competitors: [Player(name: 'Joshua Filler', flag: '🇩🇪'), Player(name: 'Denis Grabe', flag: '🇪🇪')],
+      competitors: [
+        Player(name: 'Joshua Filler', flag: '🇩🇪'),
+        Player(name: 'Denis Grabe', flag: '🇪🇪'),
+      ],
       scores: [7, 5],
     ),
   ];
@@ -291,7 +354,10 @@ class BracketData {
       label: 'Match 30',
       table: 'Table 1',
       time: 'Tue 08:41 PM',
-      competitors: [Player(name: 'Shane Van Boening', flag: '🇺🇸'), Player(name: 'Joshua Filler', flag: '🇩🇪')],
+      competitors: [
+        Player(name: 'Shane Van Boening', flag: '🇺🇸'),
+        Player(name: 'Joshua Filler', flag: '🇩🇪'),
+      ],
       scores: [7, 6],
     ),
   ];
@@ -302,8 +368,11 @@ class BracketData {
     label: 'Match 31',
     table: 'Table 1',
     time: 'Tue 10:14 PM',
-    competitors: [Player(name: 'Alex Kazakis', flag: '🇬🇷'), Player(name: 'Shane Van Boening', flag: '🇺🇸')],
-      scores: [9, 0],
+    competitors: [
+      Player(name: 'Alex Kazakis', flag: '🇬🇷'),
+      Player(name: 'Shane Van Boening', flag: '🇺🇸'),
+    ],
+    scores: [9, 0],
   );
 
   // --- TEAMS BRACKET MOCK DATA ---
@@ -346,9 +415,7 @@ class BracketData {
       label: 'QF 4',
       table: 'Table 4',
       time: 'Mon 08:00 PM',
-      competitors: [
-        Team(name: 'Team UK', logo: '🇬🇧'),
-      ],
+      competitors: [Team(name: 'Team UK', logo: '🇬🇧')],
       scores: [0],
       status: MatchStatus.completed,
     ),

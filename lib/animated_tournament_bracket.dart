@@ -1,8 +1,13 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 /// Enum representing the execution status of a match based on the tournament workflow.
 enum MatchStatus { scheduled, inProgress, completed, dispute }
+
+/// Style of connection lines between rounds
+enum ConnectorStyle { curved, sharp, straight }
+
+enum ConnectorLineType { solid, flowing }
 
 /// Convenience model representing a player in a tournament (can be used as a default).
 class Player {
@@ -98,12 +103,24 @@ class BracketPainter<T> extends CustomPainter {
   final T? finalMatch;
   final double pageOffset;
   final Color primaryColor;
+  final Color secondaryColor;
+  final Color accentColor;
   final Color defaultLineColor;
   final double connectorRadius;
   final double lineThickness;
   final double activeLineThickness;
   final double activeGlowWidth;
   final double activeGlowOpacity;
+
+  final ConnectorStyle connectorStyle;
+  final ConnectorLineType lineType;
+  final double dashLength;
+  final double dashGap;
+  final double dashSpeedMultiplier;
+  final String? searchHighlightQuery;
+  final double pulseValue;
+  final double flowValue;
+  final bool useLineGradients;
 
   // Optional connection line highlighting callbacks
   final bool Function(T match)? hasWinner;
@@ -121,12 +138,23 @@ class BracketPainter<T> extends CustomPainter {
     required this.finalMatch,
     required this.pageOffset,
     required this.primaryColor,
+    required this.secondaryColor,
+    required this.accentColor,
     required this.defaultLineColor,
     required this.connectorRadius,
     required this.lineThickness,
     required this.activeLineThickness,
     required this.activeGlowWidth,
     required this.activeGlowOpacity,
+    required this.connectorStyle,
+    required this.lineType,
+    required this.dashLength,
+    required this.dashGap,
+    required this.dashSpeedMultiplier,
+    this.searchHighlightQuery,
+    required this.pulseValue,
+    required this.flowValue,
+    required this.useLineGradients,
     this.hasWinner,
     this.getWinnerName,
     this.getPlayer1Name,
@@ -149,7 +177,29 @@ class BracketPainter<T> extends CustomPainter {
         topOffset + index * (cardHeight + verticalGap) + cardHeight / 2;
 
     final t = (pageOffset - (round - 1)).clamp(0.0, 1.0);
-    return lerpDouble(expandedY, compactY, t)!;
+    return ui.lerpDouble(expandedY, compactY, t)!;
+  }
+
+  void _drawPath(Canvas canvas, Path path, Paint paint) {
+    if (lineType == ConnectorLineType.flowing &&
+        paint.style == PaintingStyle.stroke) {
+      final double totalPattern = dashLength + dashGap;
+      final double shift =
+          (flowValue * dashSpeedMultiplier * totalPattern) % totalPattern;
+
+      for (final ui.PathMetric metric in path.computeMetrics()) {
+        double length = metric.length;
+        double distance = shift;
+        while (distance < length) {
+          final double end = (distance + dashLength).clamp(0.0, length);
+          final ui.Path segment = metric.extractPath(distance, end);
+          canvas.drawPath(segment, paint);
+          distance += totalPattern;
+        }
+      }
+    } else {
+      canvas.drawPath(path, paint);
+    }
   }
 
   @override
@@ -167,8 +217,10 @@ class BracketPainter<T> extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final activeGlowPaint = Paint()
-      ..color = primaryColor.withValues(alpha: activeGlowOpacity)
-      ..strokeWidth = activeGlowWidth
+      ..color = primaryColor.withValues(
+        alpha: activeGlowOpacity * (0.6 + 0.4 * pulseValue),
+      )
+      ..strokeWidth = activeGlowWidth * (0.8 + 0.4 * pulseValue)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
@@ -227,6 +279,8 @@ class BracketPainter<T> extends CustomPainter {
 
       bool isTopActive = false;
       bool isBottomActive = false;
+      bool isTopSearchHighlight = false;
+      bool isBottomSearchHighlight = false;
 
       if (hasWinner != null &&
           getWinnerName != null &&
@@ -247,76 +301,243 @@ class BracketPainter<T> extends CustomPainter {
             hasWinner!(parentMatch2) &&
             winner2.isNotEmpty &&
             (childP1 == winner2 || childP2 == winner2);
+
+        if (searchHighlightQuery != null && searchHighlightQuery!.isNotEmpty) {
+          final winner1Lower = winner1.toLowerCase();
+          final winner2Lower = winner2.toLowerCase();
+          final q = searchHighlightQuery!.toLowerCase();
+          isTopSearchHighlight =
+              isTopActive &&
+              winner1Lower.isNotEmpty &&
+              winner1Lower.contains(q);
+          isBottomSearchHighlight =
+              isBottomActive &&
+              winner2Lower.isNotEmpty &&
+              winner2Lower.contains(q);
+        }
       }
 
-      final double maxVLimitTop = (yChild - yTop).abs() / 2;
-      final double maxVLimitBottom = (yChild - yBottom).abs() / 2;
-      final double maxVLimit = maxVLimitTop < maxVLimitBottom
-          ? maxVLimitTop
-          : maxVLimitBottom;
-      final double maxHLimit = horizontalGap / 2;
+      final Path topPath = Path()..moveTo(startX, yTop);
+      final Path bottomPath = Path()..moveTo(startX, yBottom);
 
-      double r = connectorRadius; // Custom smooth corner radius
-      r = r.clamp(0.0, maxVLimit < maxHLimit ? maxVLimit : maxHLimit);
-
-      // 1. Top parent path (e.g. David Alcaide to midX, turning into vertical, then to yChild)
-      final double dyTop = yChild - yTop;
-      final double signTop = dyTop == 0 ? 1.0 : dyTop.sign;
-      final Path topPath = Path();
-      topPath.moveTo(startX, yTop);
-      if (dyTop.abs() < 0.01) {
-        topPath.lineTo(midX + r, yTop);
+      if (connectorStyle == ConnectorStyle.straight) {
+        topPath.lineTo(endX, yChild);
+        bottomPath.lineTo(endX, yChild);
       } else {
-        topPath.lineTo(midX - r, yTop);
-        topPath.quadraticBezierTo(midX, yTop, midX, yTop + r * signTop);
-        topPath.lineTo(midX, yChild - r * signTop);
-        topPath.quadraticBezierTo(midX, yChild, midX + r, yChild);
+        final double r = connectorStyle == ConnectorStyle.sharp
+            ? 0.0
+            : connectorRadius;
+        final double maxVLimitTop = (yChild - yTop).abs() / 2;
+        final double maxVLimitBottom = (yChild - yBottom).abs() / 2;
+        final double maxVLimit = maxVLimitTop < maxVLimitBottom
+            ? maxVLimitTop
+            : maxVLimitBottom;
+        final double maxHLimit = horizontalGap / 2;
+        final double clampedR = r.clamp(
+          0.0,
+          maxVLimit < maxHLimit ? maxVLimit : maxHLimit,
+        );
+
+        final double dyTop = yChild - yTop;
+        final double signTop = dyTop == 0 ? 1.0 : dyTop.sign;
+        if (dyTop.abs() < 0.01) {
+          topPath.lineTo(midX + clampedR, yTop);
+        } else {
+          topPath.lineTo(midX - clampedR, yTop);
+          topPath.quadraticBezierTo(
+            midX,
+            yTop,
+            midX,
+            yTop + clampedR * signTop,
+          );
+          topPath.lineTo(midX, yChild - clampedR * signTop);
+          topPath.quadraticBezierTo(midX, yChild, midX + clampedR, yChild);
+        }
+
+        final double dyBottom = yChild - yBottom;
+        final double signBottom = dyBottom == 0 ? 1.0 : dyBottom.sign;
+        if (dyBottom.abs() < 0.01) {
+          bottomPath.lineTo(midX + clampedR, yBottom);
+        } else {
+          bottomPath.lineTo(midX - clampedR, yBottom);
+          bottomPath.quadraticBezierTo(
+            midX,
+            yBottom,
+            midX,
+            yBottom + clampedR * signBottom,
+          );
+          bottomPath.lineTo(midX, yChild - clampedR * signBottom);
+          bottomPath.quadraticBezierTo(midX, yChild, midX + clampedR, yChild);
+        }
+      }
+
+      Paint topActivePaint = activePaint;
+      Paint topActiveGlowPaint = activeGlowPaint;
+
+      if (isTopSearchHighlight) {
+        topActivePaint = Paint()
+          ..color = accentColor
+          ..strokeWidth = activeLineThickness
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
+        topActiveGlowPaint = Paint()
+          ..color = accentColor.withValues(
+            alpha: activeGlowOpacity * (0.6 + 0.4 * pulseValue),
+          )
+          ..strokeWidth = activeGlowWidth * (0.8 + 0.4 * pulseValue)
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
       }
 
       if (isTopActive) {
-        canvas.drawPath(topPath, activeGlowPaint);
-        canvas.drawPath(topPath, activePaint);
+        if (useLineGradients) {
+          topActivePaint.shader = ui.Gradient.linear(
+            Offset(startX, yTop),
+            Offset(endX, yChild),
+            [primaryColor, isTopSearchHighlight ? accentColor : secondaryColor],
+          );
+          topActiveGlowPaint.shader = ui.Gradient.linear(
+            Offset(startX, yTop),
+            Offset(endX, yChild),
+            [
+              primaryColor.withValues(
+                alpha: activeGlowOpacity * (0.6 + 0.4 * pulseValue),
+              ),
+              (isTopSearchHighlight ? accentColor : secondaryColor).withValues(
+                alpha: activeGlowOpacity * (0.6 + 0.4 * pulseValue),
+              ),
+            ],
+          );
+        } else {
+          topActivePaint.shader = null;
+          topActiveGlowPaint.shader = null;
+        }
+        _drawPath(canvas, topPath, topActiveGlowPaint);
+        _drawPath(canvas, topPath, topActivePaint);
       } else {
-        canvas.drawPath(topPath, defaultPaint);
+        _drawPath(canvas, topPath, defaultPaint);
       }
 
-      // 2. Bottom parent path (e.g. Skyler Woodward to midX, turning into vertical, then to yChild)
-      final double dyBottom = yChild - yBottom;
-      final double signBottom = dyBottom == 0 ? 1.0 : dyBottom.sign;
-      final Path bottomPath = Path();
-      bottomPath.moveTo(startX, yBottom);
-      if (dyBottom.abs() < 0.01) {
-        bottomPath.lineTo(midX + r, yBottom);
-      } else {
-        bottomPath.lineTo(midX - r, yBottom);
-        bottomPath.quadraticBezierTo(
-          midX,
-          yBottom,
-          midX,
-          yBottom + r * signBottom,
-        );
-        bottomPath.lineTo(midX, yChild - r * signBottom);
-        bottomPath.quadraticBezierTo(midX, yChild, midX + r, yChild);
+      Paint bottomActivePaint = activePaint;
+      Paint bottomActiveGlowPaint = activeGlowPaint;
+
+      if (isBottomSearchHighlight) {
+        bottomActivePaint = Paint()
+          ..color = accentColor
+          ..strokeWidth = activeLineThickness
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
+        bottomActiveGlowPaint = Paint()
+          ..color = accentColor.withValues(
+            alpha: activeGlowOpacity * (0.6 + 0.4 * pulseValue),
+          )
+          ..strokeWidth = activeGlowWidth * (0.8 + 0.4 * pulseValue)
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
       }
 
       if (isBottomActive) {
-        canvas.drawPath(bottomPath, activeGlowPaint);
-        canvas.drawPath(bottomPath, activePaint);
+        if (useLineGradients) {
+          bottomActivePaint.shader = ui.Gradient.linear(
+            Offset(startX, yBottom),
+            Offset(endX, yChild),
+            [
+              primaryColor,
+              isBottomSearchHighlight ? accentColor : secondaryColor,
+            ],
+          );
+          bottomActiveGlowPaint.shader = ui.Gradient.linear(
+            Offset(startX, yBottom),
+            Offset(endX, yChild),
+            [
+              primaryColor.withValues(
+                alpha: activeGlowOpacity * (0.6 + 0.4 * pulseValue),
+              ),
+              (isBottomSearchHighlight ? accentColor : secondaryColor)
+                  .withValues(
+                    alpha: activeGlowOpacity * (0.6 + 0.4 * pulseValue),
+                  ),
+            ],
+          );
+        } else {
+          bottomActivePaint.shader = null;
+          bottomActiveGlowPaint.shader = null;
+        }
+        _drawPath(canvas, bottomPath, bottomActiveGlowPaint);
+        _drawPath(canvas, bottomPath, bottomActivePaint);
       } else {
-        canvas.drawPath(bottomPath, defaultPaint);
+        _drawPath(canvas, bottomPath, defaultPaint);
       }
 
-      // 3. Shared horizontal path to the child match card
-      final Path sharedPath = Path()
-        ..moveTo(midX + r, yChild)
-        ..lineTo(endX, yChild);
+      if (connectorStyle != ConnectorStyle.straight) {
+        final double r = connectorStyle == ConnectorStyle.sharp
+            ? 0.0
+            : connectorRadius;
+        final double maxVLimitTop = (yChild - yTop).abs() / 2;
+        final double maxVLimitBottom = (yChild - yBottom).abs() / 2;
+        final double maxVLimit = maxVLimitTop < maxVLimitBottom
+            ? maxVLimitTop
+            : maxVLimitBottom;
+        final double maxHLimit = horizontalGap / 2;
+        final double clampedR = r.clamp(
+          0.0,
+          maxVLimit < maxHLimit ? maxVLimit : maxHLimit,
+        );
 
-      final bool isChildActive = isTopActive || isBottomActive;
-      if (isChildActive) {
-        canvas.drawPath(sharedPath, activeGlowPaint);
-        canvas.drawPath(sharedPath, activePaint);
-      } else {
-        canvas.drawPath(sharedPath, defaultPaint);
+        final Path sharedPath = Path()
+          ..moveTo(midX + clampedR, yChild)
+          ..lineTo(endX, yChild);
+
+        final bool isChildActive = isTopActive || isBottomActive;
+        final bool isSharedHighlight =
+            isTopSearchHighlight || isBottomSearchHighlight;
+
+        if (isChildActive) {
+          Paint sharedActivePaint = activePaint;
+          Paint sharedActiveGlowPaint = activeGlowPaint;
+
+          if (isSharedHighlight) {
+            sharedActivePaint = Paint()
+              ..color = accentColor
+              ..strokeWidth = activeLineThickness
+              ..style = PaintingStyle.stroke
+              ..strokeCap = StrokeCap.round;
+            sharedActiveGlowPaint = Paint()
+              ..color = accentColor.withValues(
+                alpha: activeGlowOpacity * (0.6 + 0.4 * pulseValue),
+              )
+              ..strokeWidth = activeGlowWidth * (0.8 + 0.4 * pulseValue)
+              ..style = PaintingStyle.stroke
+              ..strokeCap = StrokeCap.round;
+          }
+
+          if (useLineGradients) {
+            sharedActivePaint.shader = ui.Gradient.linear(
+              Offset(startX, yChild),
+              Offset(endX, yChild),
+              [primaryColor, isSharedHighlight ? accentColor : secondaryColor],
+            );
+            sharedActiveGlowPaint.shader = ui.Gradient.linear(
+              Offset(startX, yChild),
+              Offset(endX, yChild),
+              [
+                primaryColor.withValues(
+                  alpha: activeGlowOpacity * (0.6 + 0.4 * pulseValue),
+                ),
+                (isSharedHighlight ? accentColor : secondaryColor).withValues(
+                  alpha: activeGlowOpacity * (0.6 + 0.4 * pulseValue),
+                ),
+              ],
+            );
+          } else {
+            sharedActivePaint.shader = null;
+            sharedActiveGlowPaint.shader = null;
+          }
+          _drawPath(canvas, sharedPath, sharedActiveGlowPaint);
+          _drawPath(canvas, sharedPath, sharedActivePaint);
+        } else {
+          _drawPath(canvas, sharedPath, defaultPaint);
+        }
       }
     }
   }
@@ -341,6 +562,7 @@ class BracketPainter<T> extends CustomPainter {
 
     final semiMatch = currentRound[0];
     bool isSemiWinnerActive = false;
+    bool isSemiWinnerHighlight = false;
 
     if (hasWinner != null &&
         getWinnerName != null &&
@@ -354,21 +576,63 @@ class BracketPainter<T> extends CustomPainter {
           hasWinner!(semiMatch) &&
           semiWinner.isNotEmpty &&
           (finalP1 == semiWinner || finalP2 == semiWinner);
+
+      if (searchHighlightQuery != null && searchHighlightQuery!.isNotEmpty) {
+        final semiWinnerLower = semiWinner.toLowerCase();
+        final q = searchHighlightQuery!.toLowerCase();
+        isSemiWinnerHighlight =
+            isSemiWinnerActive &&
+            semiWinnerLower.isNotEmpty &&
+            semiWinnerLower.contains(q);
+      }
     }
 
+    final Path finalPath = Path()
+      ..moveTo(startX, ySemi)
+      ..lineTo(endX, yFinal);
+
     if (isSemiWinnerActive) {
-      canvas.drawLine(
-        Offset(startX, ySemi),
-        Offset(endX, yFinal),
-        activeGlowPaint,
-      );
-      canvas.drawLine(Offset(startX, ySemi), Offset(endX, yFinal), activePaint);
+      Paint finalActivePaint = activePaint;
+      Paint finalActiveGlowPaint = activeGlowPaint;
+
+      if (isSemiWinnerHighlight) {
+        finalActivePaint = Paint()
+          ..color = accentColor
+          ..strokeWidth = activeLineThickness
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
+        finalActiveGlowPaint = Paint()
+          ..color = accentColor.withValues(
+            alpha: activeGlowOpacity * (0.6 + 0.4 * pulseValue),
+          )
+          ..strokeWidth = activeGlowWidth * (0.8 + 0.4 * pulseValue)
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
+      }
+
+      if (useLineGradients) {
+        finalActivePaint.shader = ui.Gradient.linear(
+          Offset(startX, ySemi),
+          Offset(endX, yFinal),
+          [primaryColor, isSemiWinnerHighlight ? accentColor : secondaryColor],
+        );
+        finalActiveGlowPaint.shader =
+            ui.Gradient.linear(Offset(startX, ySemi), Offset(endX, yFinal), [
+              primaryColor.withValues(
+                alpha: activeGlowOpacity * (0.6 + 0.4 * pulseValue),
+              ),
+              (isSemiWinnerHighlight ? accentColor : secondaryColor).withValues(
+                alpha: activeGlowOpacity * (0.6 + 0.4 * pulseValue),
+              ),
+            ]);
+      } else {
+        finalActivePaint.shader = null;
+        finalActiveGlowPaint.shader = null;
+      }
+      _drawPath(canvas, finalPath, finalActiveGlowPaint);
+      _drawPath(canvas, finalPath, finalActivePaint);
     } else {
-      canvas.drawLine(
-        Offset(startX, ySemi),
-        Offset(endX, yFinal),
-        defaultPaint,
-      );
+      _drawPath(canvas, finalPath, defaultPaint);
     }
   }
 
@@ -383,12 +647,23 @@ class BracketPainter<T> extends CustomPainter {
         oldDelegate.branchRounds != branchRounds ||
         oldDelegate.finalMatch != finalMatch ||
         oldDelegate.primaryColor != primaryColor ||
+        oldDelegate.secondaryColor != secondaryColor ||
+        oldDelegate.accentColor != accentColor ||
         oldDelegate.defaultLineColor != defaultLineColor ||
         oldDelegate.connectorRadius != connectorRadius ||
         oldDelegate.lineThickness != lineThickness ||
         oldDelegate.activeLineThickness != activeLineThickness ||
         oldDelegate.activeGlowWidth != activeGlowWidth ||
-        oldDelegate.activeGlowOpacity != activeGlowOpacity;
+        oldDelegate.activeGlowOpacity != activeGlowOpacity ||
+        oldDelegate.connectorStyle != connectorStyle ||
+        oldDelegate.lineType != lineType ||
+        oldDelegate.dashLength != dashLength ||
+        oldDelegate.dashGap != dashGap ||
+        oldDelegate.dashSpeedMultiplier != dashSpeedMultiplier ||
+        oldDelegate.searchHighlightQuery != searchHighlightQuery ||
+        oldDelegate.pulseValue != pulseValue ||
+        oldDelegate.flowValue != flowValue ||
+        oldDelegate.useLineGradients != useLineGradients;
   }
 }
 
@@ -452,6 +727,35 @@ class AnimatedTournamentBracket<T> extends StatefulWidget {
   final double activeLineThickness;
   final double activeGlowWidth;
   final double activeGlowOpacity;
+  final ConnectorStyle connectorStyle;
+
+  /// Style of connection lines (solid, flowing dashed pattern).
+  final ConnectorLineType lineType;
+
+  /// Length of active dashes in flowing lines. Defaults to 12.0.
+  final double dashLength;
+
+  /// Gap between active dashes in flowing lines. Defaults to 8.0.
+  final double dashGap;
+
+  /// Speed multiplier for the flowing animation. Defaults to 1.0.
+  final double dashSpeedMultiplier;
+
+  /// Player or competitor name to trace and highlight gold.
+  final String? searchHighlightQuery;
+
+  /// Whether to pulse/glow the active connection paths.
+  final bool pulseGlow;
+
+  /// Duration/speed of the pulsing glow animation.
+  final Duration pulseDuration;
+
+  /// Whether to draw gradient connection lines from source to destination matches.
+  final bool useLineGradients;
+
+  /// Optional builder to draw headers directly above each round column in the canvas.
+  final Widget Function(BuildContext context, int roundIndex)?
+  roundHeaderBuilder;
 
   /// Custom Tab Bar styling properties.
   final Color? tabBarBorderColor;
@@ -488,6 +792,16 @@ class AnimatedTournamentBracket<T> extends StatefulWidget {
     this.activeLineThickness = 3.0,
     this.activeGlowWidth = 8.0,
     this.activeGlowOpacity = 0.15,
+    this.connectorStyle = ConnectorStyle.curved,
+    this.lineType = ConnectorLineType.solid,
+    this.dashLength = 12.0,
+    this.dashGap = 8.0,
+    this.dashSpeedMultiplier = 1.0,
+    this.searchHighlightQuery,
+    this.pulseGlow = true,
+    this.pulseDuration = const Duration(seconds: 2),
+    this.useLineGradients = true,
+    this.roundHeaderBuilder,
     this.tabBarBorderColor,
     this.tabBarBackgroundColor,
     this.tabBarBorderRadius = 12.0,
@@ -502,9 +816,10 @@ class AnimatedTournamentBracket<T> extends StatefulWidget {
 
 class _AnimatedTournamentBracketState<T>
     extends State<AnimatedTournamentBracket<T>>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _snapAnimationController;
   late final CurvedAnimation _snapAnimation;
+  late final AnimationController _pulseController;
   double _pageOffset = 0.0;
   int _activeRound = 0;
   double _snapStartOffset = 0.0;
@@ -526,7 +841,7 @@ class _AnimatedTournamentBracketState<T>
     );
     _snapAnimation.addListener(() {
       setState(() {
-        _pageOffset = lerpDouble(
+        _pageOffset = ui.lerpDouble(
           _snapStartOffset,
           _snapTargetOffset,
           _snapAnimation.value,
@@ -534,11 +849,35 @@ class _AnimatedTournamentBracketState<T>
         _activeRound = _pageOffset.round();
       });
     });
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: widget.pulseDuration,
+    );
+    if (widget.pulseGlow) {
+      _pulseController.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant AnimatedTournamentBracket<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.pulseDuration != oldWidget.pulseDuration) {
+      _pulseController.duration = widget.pulseDuration;
+    }
+    if (widget.pulseGlow != oldWidget.pulseGlow) {
+      if (widget.pulseGlow) {
+        _pulseController.repeat(reverse: true);
+      } else {
+        _pulseController.stop();
+      }
+    }
   }
 
   @override
   void dispose() {
     _snapAnimationController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -585,7 +924,7 @@ class _AnimatedTournamentBracketState<T>
         topOffset + index * (cardHeight + verticalGap) + cardHeight / 2;
 
     final t = (pageOffset - (round - 1)).clamp(0.0, 1.0);
-    return lerpDouble(expandedY, compactY, t)!;
+    return ui.lerpDouble(expandedY, compactY, t)!;
   }
 
   @override
@@ -637,7 +976,9 @@ class _AnimatedTournamentBracketState<T>
                     final double horizontalGap =
                         widget.horizontalGap ?? (constraints.maxWidth * 0.12);
                     final double verticalGap = widget.verticalGap;
-                    final double topOffset = widget.topOffset;
+                    final double topOffset =
+                        widget.topOffset +
+                        (widget.roundHeaderBuilder != null ? 40.0 : 0.0);
 
                     final double colWidth = cardWidth + horizontalGap;
                     final double canvasWidth = colWidth * numRounds + 40;
@@ -660,7 +1001,7 @@ class _AnimatedTournamentBracketState<T>
                       }
                       int i = pageOffset.floor().clamp(0, numRounds - 2);
                       double t = pageOffset - i;
-                      return lerpDouble(heights[i], heights[i + 1], t)!;
+                      return ui.lerpDouble(heights[i], heights[i + 1], t)!;
                     }
 
                     final double canvasHeight = getActiveContentHeight(
@@ -869,30 +1210,65 @@ class _AnimatedTournamentBracketState<T>
                 children: [
                   // Vector Painted Lines
                   Positioned.fill(
-                    child: CustomPaint(
-                      painter: BracketPainter<T>(
-                        cardWidth: cardWidth,
-                        cardHeight: cardHeight,
-                        horizontalGap: horizontalGap,
-                        verticalGap: verticalGap,
-                        topOffset: topOffset,
-                        branchRounds: branchRounds,
-                        finalMatch: finalMatch,
-                        pageOffset: _pageOffset,
-                        primaryColor: widget.primaryColor,
-                        defaultLineColor: widget.defaultLineColor,
-                        connectorRadius: widget.connectorRadius,
-                        lineThickness: widget.lineThickness,
-                        activeLineThickness: widget.activeLineThickness,
-                        activeGlowWidth: widget.activeGlowWidth,
-                        activeGlowOpacity: widget.activeGlowOpacity,
-                        hasWinner: widget.hasWinner,
-                        getWinnerName: widget.getWinnerName,
-                        getPlayer1Name: widget.getPlayer1Name,
-                        getPlayer2Name: widget.getPlayer2Name,
-                      ),
+                    child: AnimatedBuilder(
+                      animation: _pulseController,
+                      builder: (context, child) {
+                        return CustomPaint(
+                          painter: BracketPainter<T>(
+                            cardWidth: cardWidth,
+                            cardHeight: cardHeight,
+                            horizontalGap: horizontalGap,
+                            verticalGap: verticalGap,
+                            topOffset: topOffset,
+                            branchRounds: branchRounds,
+                            finalMatch: finalMatch,
+                            pageOffset: _pageOffset,
+                            primaryColor: widget.primaryColor,
+                            secondaryColor: widget.secondaryColor,
+                            accentColor: widget.accentColor,
+                            defaultLineColor: widget.defaultLineColor,
+                            connectorRadius: widget.connectorRadius,
+                            lineThickness: widget.lineThickness,
+                            activeLineThickness: widget.activeLineThickness,
+                            activeGlowWidth: widget.activeGlowWidth,
+                            activeGlowOpacity: widget.activeGlowOpacity,
+                            connectorStyle: widget.connectorStyle,
+                            lineType: widget.lineType,
+                            dashLength: widget.dashLength,
+                            dashGap: widget.dashGap,
+                            dashSpeedMultiplier: widget.dashSpeedMultiplier,
+                            searchHighlightQuery: widget.searchHighlightQuery,
+                            pulseValue: widget.pulseGlow
+                                ? _pulseController.value
+                                : 0.0,
+                            flowValue: widget.pulseGlow
+                                ? (_pulseController.status ==
+                                          AnimationStatus.reverse
+                                      ? 2.0 - _pulseController.value
+                                      : _pulseController.value)
+                                : 0.0,
+                            useLineGradients: widget.useLineGradients,
+                            hasWinner: widget.hasWinner,
+                            getWinnerName: widget.getWinnerName,
+                            getPlayer1Name: widget.getPlayer1Name,
+                            getPlayer2Name: widget.getPlayer2Name,
+                          ),
+                        );
+                      },
                     ),
                   ),
+
+                  // Round Column Headers
+                  if (widget.roundHeaderBuilder != null)
+                    ...List.generate(numRounds, (roundIndex) {
+                      return Positioned(
+                        left: roundIndex * colWidth,
+                        top: topOffset - 35,
+                        width: cardWidth,
+                        height: 30,
+                        child: widget.roundHeaderBuilder!(context, roundIndex),
+                      );
+                    }),
                   // Dynamic Cards for all rounds except the Grand Final
                   ...List.generate(branchRounds.length, (roundIndex) {
                     final roundMatches = branchRounds[roundIndex];

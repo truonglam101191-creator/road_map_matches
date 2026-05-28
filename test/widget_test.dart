@@ -36,7 +36,7 @@ void main() {
         table: 'Table 1',
         time: '10:00 AM',
         competitors: [p1, p2],
-      scores: [10, 8],
+        scores: [10, 8],
       );
 
       expect(match1.hasWinner, true);
@@ -48,7 +48,7 @@ void main() {
         table: 'Table 1',
         time: '11:00 AM',
         competitors: [p1, p2],
-      scores: [5, 11],
+        scores: [5, 11],
       );
 
       expect(match2.hasWinner, true);
@@ -64,7 +64,7 @@ void main() {
         table: 'Table 1',
         time: '12:00 PM',
         competitors: [p1, Player.walkOver],
-      scores: [0, 0],
+        scores: [0, 0],
       );
 
       expect(matchWalkOver.hasWinner, true);
@@ -74,7 +74,11 @@ void main() {
     test('MatchModel supports custom Team model', () {
       const t1 = Team(teamName: 'Team Vietnam', country: '🇻🇳');
       const t2 = Team(teamName: 'Team USA', country: '🇺🇸');
-      const walkOverTeam = Team(teamName: 'Walk Over Team', country: '🌍', isWalkOver: true);
+      const walkOverTeam = Team(
+        teamName: 'Walk Over Team',
+        country: '🌍',
+        isWalkOver: true,
+      );
 
       const match = MatchModel<Team>(
         id: 4,
@@ -82,7 +86,7 @@ void main() {
         table: 'Table 1',
         time: '08:00 PM',
         competitors: [t1, t2],
-      scores: [5, 3],
+        scores: [5, 3],
       );
 
       expect(match.hasWinner, true);
@@ -94,7 +98,7 @@ void main() {
         table: 'Table 2',
         time: '06:00 PM',
         competitors: [t1, walkOverTeam],
-      scores: [0, 0],
+        scores: [0, 0],
       );
 
       expect(matchWalkOver.hasWinner, true);
@@ -132,7 +136,10 @@ void main() {
       label: 'Championship Match',
       table: 'T1',
       time: '18:00',
-      competitors: [Player(name: 'Finalist 1', flag: '🇪🇸'), Player(name: 'Finalist 2', flag: '🇩🇪')],
+      competitors: [
+        Player(name: 'Finalist 1', flag: '🇪🇸'),
+        Player(name: 'Finalist 2', flag: '🇩🇪'),
+      ],
       scores: [11, 9],
     );
 
@@ -152,10 +159,13 @@ void main() {
             grandFinal: grandFinal,
             roundTitles: roundTitles,
             tabBuilder: tabBuilder,
+            pulseGlow: false,
             hasWinner: (m) => m.hasWinner,
             getWinnerName: (m) => m.winner?.name ?? '',
-            getPlayer1Name: (m) => m.competitors.isNotEmpty ? m.competitors.first.name : '',
-            getPlayer2Name: (m) => m.competitors.length > 1 ? m.competitors.last.name : '',
+            getPlayer1Name: (m) =>
+                m.competitors.isNotEmpty ? m.competitors.first.name : '',
+            getPlayer2Name: (m) =>
+                m.competitors.length > 1 ? m.competitors.last.name : '',
             itemBuilder: (context, match) {
               return SizedBox(
                 key: ValueKey('match-${match.id}'),
@@ -165,9 +175,17 @@ void main() {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(match.competitors.isNotEmpty ? match.competitors.first.name : ''),
+                      Text(
+                        match.competitors.isNotEmpty
+                            ? match.competitors.first.name
+                            : '',
+                      ),
                       Text('vs'),
-                      Text(match.competitors.length > 1 ? match.competitors.last.name : ''),
+                      Text(
+                        match.competitors.length > 1
+                            ? match.competitors.last.name
+                            : '',
+                      ),
                     ],
                   ),
                 ),
