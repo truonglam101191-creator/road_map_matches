@@ -36,7 +36,37 @@ class TournamentBracketDemo extends StatefulWidget {
 }
 
 class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
-  MatchModel? _selectedMatch;
+  MatchModel<dynamic>? _selectedMatch;
+  int _selectedCategoryTab = 0; // 0: Singles, 1: Teams, 2: Mix
+
+  List<List<MatchModel<dynamic>>> _getBranchRounds() {
+    switch (_selectedCategoryTab) {
+      case 0:
+        return [
+          BracketData.round1Tab1,
+          BracketData.round2Tab1,
+          BracketData.round3Tab1,
+          BracketData.round4Tab1,
+        ];
+      case 1:
+        return [BracketData.teamRound1, BracketData.teamRound2];
+      case 2:
+      default:
+        return [BracketData.mixRound1];
+    }
+  }
+
+  MatchModel<dynamic>? _getGrandFinal() {
+    switch (_selectedCategoryTab) {
+      case 0:
+        return BracketData.grandFinal;
+      case 1:
+        return BracketData.teamGrandFinal;
+      case 2:
+      default:
+        return BracketData.mixGrandFinal;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,33 +80,43 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
               children: [
                 const SizedBox(height: 12),
                 _buildHeader(),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                _buildCategorySelector(),
+                const SizedBox(height: 8),
                 Expanded(
-                  child: AnimatedTournamentBracket<MatchModel>(
-                    branch1Rounds: const [
-                      BracketData.round1Tab1,
-                      BracketData.round1Tab1,
-                      BracketData.round2Tab1,
-                      BracketData.round3Tab1,
-                      BracketData.round4Tab1,
-                    ],
-                    grandFinal: BracketData.grandFinal,
+                  child: AnimatedTournamentBracket<MatchModel<dynamic>>(
+                    key: ValueKey(
+                      _selectedCategoryTab,
+                    ), // Force state refresh on tab switch
+                    branch1Rounds: _getBranchRounds(),
+                    grandFinal: _getGrandFinal(),
 
-                    // Expose getters for glowing victory connection lines!
                     hasWinner: (match) => match.hasWinner,
-                    getWinnerName: (match) => match.winner.name,
-                    getPlayer1Name: (match) => match.player1.name,
-                    getPlayer2Name: (match) => match.player2.name,
+                    getWinnerName: (match) => _getCompetitorName(match.winner),
+                    getPlayer1Name: (match) => match.competitors.isNotEmpty
+                        ? _getCompetitorName(match.competitors.first)
+                        : '',
+                    getPlayer2Name: (match) => match.competitors.length > 1
+                        ? _getCompetitorName(match.competitors.last)
+                        : '',
 
                     // Custom Tab Label Builder demonstrating full visual control!
                     tabBuilder: (context, index, isSelected) {
-                      final titles = [
-                        'Round 1',
-                        'Last 16',
-                        'Quarter',
-                        'Semi',
-                        'Final',
-                      ];
+                      final List<String> titles;
+                      if (_selectedCategoryTab == 0) {
+                        titles = [
+                          'Round 1',
+                          'Last 16',
+                          'Quarter',
+                          'Semi',
+                          'Final',
+                        ];
+                      } else if (_selectedCategoryTab == 1) {
+                        titles = ['Quarter', 'Semi', 'Final'];
+                      } else {
+                        titles = ['Semi', 'Final'];
+                      }
+
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -117,6 +157,63 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
           // Detail Match Modal Overlay managed here in the application layer!
           if (_selectedMatch != null) _buildMatchDetailOverlay(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCategorySelector() {
+    final categories = [
+      'Singles (Đấu đơn)',
+      'Teams (Đồng đội)',
+      'Mix (Hỗn hợp)',
+    ];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Container(
+        height: 38,
+        decoration: BoxDecoration(
+          color: const Color(0xFF131A30).withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(19),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: Row(
+          children: List.generate(categories.length, (index) {
+            final isSelected = _selectedCategoryTab == index;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedCategoryTab = index;
+                    _selectedMatch = null;
+                  });
+                },
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  alignment: Alignment.center,
+                  margin: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? const LinearGradient(
+                            colors: [Color(0xFF0066FF), Color(0xFF00E5FF)],
+                          )
+                        : null,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    categories[index],
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.white60,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
       ),
     );
   }
@@ -179,9 +276,13 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
   Widget _buildMatchCard(MatchModel match) {
     final bool isFinal = match.id == 31;
     final bool isWinner1 =
-        match.hasWinner && match.winner.name == match.player1.name;
+        match.hasWinner &&
+        match.winner?.name ==
+            (match.competitors.isNotEmpty ? match.competitors.first.name : '');
     final bool isWinner2 =
-        match.hasWinner && match.winner.name == match.player2.name;
+        match.hasWinner &&
+        match.winner?.name ==
+            (match.competitors.length > 1 ? match.competitors.last.name : '');
 
     return GestureDetector(
       onTap: () {
@@ -365,8 +466,14 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildPlayerRow(
-                        match.player1,
-                        match.score1,
+                        match.competitors.isNotEmpty
+                            ? match.competitors[0]
+                            : (match.hasWinner
+                                  ? (_selectedCategoryTab == 1
+                                        ? Team.walkOver
+                                        : Player.walkOver)
+                                  : const Player(name: 'TBD', flag: '❓')),
+                        match.scores.isNotEmpty ? match.scores[0] : 0,
                         isWinner1,
                         match.hasWinner,
                       ),
@@ -375,8 +482,14 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                         color: Colors.white.withValues(alpha: 0.04),
                       ),
                       _buildPlayerRow(
-                        match.player2,
-                        match.score2,
+                        match.competitors.length > 1
+                            ? match.competitors[1]
+                            : (match.hasWinner
+                                  ? (_selectedCategoryTab == 1
+                                        ? Team.walkOver
+                                        : Player.walkOver)
+                                  : const Player(name: 'TBD', flag: '❓')),
+                        match.scores.length > 1 ? match.scores[1] : 0,
                         isWinner2,
                         match.hasWinner,
                       ),
@@ -391,12 +504,63 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
     );
   }
 
+  String _getCompetitorName(dynamic competitor) {
+    if (competitor == null) return 'TBD';
+    if (competitor is Player) return competitor.name;
+    if (competitor is Team) return competitor.name;
+    try {
+      return (competitor as dynamic).name ?? 'TBD';
+    } catch (_) {
+      return 'TBD';
+    }
+  }
+
+  String _getCompetitorLogo(dynamic competitor) {
+    if (competitor == null) return '❓';
+    if (competitor is Player) return competitor.flag;
+    if (competitor is Team) return competitor.logo;
+    try {
+      return (competitor as dynamic).flag ??
+          (competitor as dynamic).logo ??
+          '❓';
+    } catch (_) {
+      return '❓';
+    }
+  }
+
+  bool _isCompetitorCheckedIn(dynamic competitor) {
+    if (competitor == null) return false;
+    if (competitor is Player) return competitor.isCheckedIn;
+    if (competitor is Team) return competitor.isCheckedIn;
+    try {
+      return (competitor as dynamic).isCheckedIn == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool _isCompetitorWalkOver(dynamic competitor) {
+    if (competitor == null) return false;
+    if (competitor is Player) return competitor.isWalkOver;
+    if (competitor is Team) return competitor.isWalkOver;
+    try {
+      return (competitor as dynamic).isWalkOver == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Widget _buildPlayerRow(
-    Player player,
+    dynamic competitor,
     int score,
     bool isWinner,
     bool hasPlayed,
   ) {
+    final name = _getCompetitorName(competitor);
+    final logo = _getCompetitorLogo(competitor);
+    final isWalkOver = _isCompetitorWalkOver(competitor);
+    final isCheckedIn = _isCompetitorCheckedIn(competitor);
+
     return Row(
       children: [
         Container(
@@ -407,7 +571,7 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
             color: Colors.white.withValues(alpha: 0.04),
             shape: BoxShape.circle,
           ),
-          child: Text(player.flag, style: const TextStyle(fontSize: 10)),
+          child: Text(logo, style: const TextStyle(fontSize: 10)),
         ),
         const SizedBox(width: 6),
         Expanded(
@@ -415,31 +579,29 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
             children: [
               Expanded(
                 child: Text(
-                  player.name,
+                  name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: player.isWalkOver
+                    color: isWalkOver
                         ? Colors.white.withValues(alpha: 0.25)
                         : isWinner
                         ? Colors.white
                         : Colors.white.withValues(alpha: 0.55),
                     fontSize: 9.5,
                     fontWeight: isWinner ? FontWeight.w800 : FontWeight.w500,
-                    fontStyle: player.isWalkOver
-                        ? FontStyle.italic
-                        : FontStyle.normal,
+                    fontStyle: isWalkOver ? FontStyle.italic : FontStyle.normal,
                   ),
                 ),
               ),
-              if (player.isCheckedIn) ...[
+              if (isCheckedIn) ...[
                 const SizedBox(width: 4),
                 const Icon(Icons.verified, size: 9, color: Colors.greenAccent),
               ],
             ],
           ),
         ),
-        if (!player.isWalkOver)
+        if (!isWalkOver)
           Container(
             width: 18,
             height: 16,
@@ -573,9 +735,16 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                       ),
                       const SizedBox(height: 20),
                       _buildDetailPlayerCard(
-                        match.player1,
-                        match.score1,
-                        match.winner.name == match.player1.name,
+                        match.competitors.isNotEmpty
+                            ? match.competitors[0]
+                            : (match.hasWinner
+                                  ? (_selectedCategoryTab == 1
+                                        ? Team.walkOver
+                                        : Player.walkOver)
+                                  : const Player(name: 'TBD', flag: '❓')),
+                        match.scores.isNotEmpty ? match.scores[0] : 0,
+                        match.competitors.isNotEmpty &&
+                            match.winner?.name == match.competitors[0].name,
                         match.hasWinner,
                       ),
                       const SizedBox(height: 8),
@@ -586,9 +755,16 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                       ),
                       const SizedBox(height: 8),
                       _buildDetailPlayerCard(
-                        match.player2,
-                        match.score2,
-                        match.winner.name == match.player2.name,
+                        match.competitors.length > 1
+                            ? match.competitors[1]
+                            : (match.hasWinner
+                                  ? (_selectedCategoryTab == 1
+                                        ? Team.walkOver
+                                        : Player.walkOver)
+                                  : const Player(name: 'TBD', flag: '❓')),
+                        match.scores.length > 1 ? match.scores[1] : 0,
+                        match.competitors.length > 1 &&
+                            match.winner?.name == match.competitors[1].name,
                         match.hasWinner,
                       ),
                     ],
@@ -630,11 +806,16 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
   }
 
   Widget _buildDetailPlayerCard(
-    Player player,
+    dynamic competitor,
     int score,
     bool isWinner,
     bool hasPlayed,
   ) {
+    final name = _getCompetitorName(competitor);
+    final logo = _getCompetitorLogo(competitor);
+    final isWalkOver = _isCompetitorWalkOver(competitor);
+    final isCheckedIn = _isCompetitorCheckedIn(competitor);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -658,7 +839,7 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
               color: Colors.white.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
-            child: Text(player.flag, style: const TextStyle(fontSize: 15)),
+            child: Text(logo, style: const TextStyle(fontSize: 15)),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -669,21 +850,19 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      player.name,
+                      name,
                       style: TextStyle(
-                        color: player.isWalkOver
-                            ? Colors.white24
-                            : Colors.white,
+                        color: isWalkOver ? Colors.white24 : Colors.white,
                         fontSize: 12,
                         fontWeight: isWinner
                             ? FontWeight.w900
                             : FontWeight.w600,
-                        fontStyle: player.isWalkOver
+                        fontStyle: isWalkOver
                             ? FontStyle.italic
                             : FontStyle.normal,
                       ),
                     ),
-                    if (player.isCheckedIn) ...[
+                    if (isCheckedIn) ...[
                       const SizedBox(width: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -721,7 +900,7 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
                     ],
                   ],
                 ),
-                if (isWinner && !player.isWalkOver)
+                if (isWinner && !isWalkOver)
                   Padding(
                     padding: const EdgeInsets.only(top: 2.0),
                     child: Text(
@@ -737,7 +916,7 @@ class _TournamentBracketDemoState extends State<TournamentBracketDemo> {
               ],
             ),
           ),
-          if (!player.isWalkOver)
+          if (!isWalkOver)
             Text(
               '$score',
               style: TextStyle(

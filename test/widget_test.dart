@@ -2,6 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:road_map/road_map.dart';
 
+class Team {
+  final String teamName;
+  final String country;
+  final bool isWalkOver;
+
+  const Team({
+    required this.teamName,
+    required this.country,
+    this.isWalkOver = false,
+  });
+}
+
 void main() {
   group('Player & MatchModel Unit Tests', () {
     test('Player creation and Walk Over default', () {
@@ -23,28 +35,24 @@ void main() {
         label: 'Quarter-Final',
         table: 'Table 1',
         time: '10:00 AM',
-        player1: p1,
-        player2: p2,
-        score1: 10,
-        score2: 8,
+        competitors: [p1, p2],
+      scores: [10, 8],
       );
 
       expect(match1.hasWinner, true);
-      expect(match1.winner.name, 'Player 1');
+      expect(match1.winner!.name, 'Player 1');
 
       const match2 = MatchModel(
         id: 2,
         label: 'Quarter-Final',
         table: 'Table 1',
         time: '11:00 AM',
-        player1: p1,
-        player2: p2,
-        score1: 5,
-        score2: 11,
+        competitors: [p1, p2],
+      scores: [5, 11],
       );
 
       expect(match2.hasWinner, true);
-      expect(match2.winner.name, 'Player 2');
+      expect(match2.winner!.name, 'Player 2');
     });
 
     test('MatchModel winner determination by Walk Over', () {
@@ -55,14 +63,42 @@ void main() {
         label: 'Quarter-Final',
         table: 'Table 1',
         time: '12:00 PM',
-        player1: p1,
-        player2: Player.walkOver,
-        score1: 0,
-        score2: 0,
+        competitors: [p1, Player.walkOver],
+      scores: [0, 0],
       );
 
       expect(matchWalkOver.hasWinner, true);
-      expect(matchWalkOver.winner.name, 'Player 1');
+      expect(matchWalkOver.winner!.name, 'Player 1');
+    });
+
+    test('MatchModel supports custom Team model', () {
+      const t1 = Team(teamName: 'Team Vietnam', country: '🇻🇳');
+      const t2 = Team(teamName: 'Team USA', country: '🇺🇸');
+      const walkOverTeam = Team(teamName: 'Walk Over Team', country: '🌍', isWalkOver: true);
+
+      const match = MatchModel<Team>(
+        id: 4,
+        label: 'Team Final',
+        table: 'Table 1',
+        time: '08:00 PM',
+        competitors: [t1, t2],
+      scores: [5, 3],
+      );
+
+      expect(match.hasWinner, true);
+      expect(match.winner!.teamName, 'Team Vietnam');
+
+      const matchWalkOver = MatchModel<Team>(
+        id: 5,
+        label: 'Team Semi',
+        table: 'Table 2',
+        time: '06:00 PM',
+        competitors: [t1, walkOverTeam],
+      scores: [0, 0],
+      );
+
+      expect(matchWalkOver.hasWinner, true);
+      expect(matchWalkOver.winner!.teamName, 'Team Vietnam');
     });
   });
 
@@ -78,10 +114,8 @@ void main() {
       label: 'Semi 1',
       table: 'T1',
       time: '14:00',
-      player1: p1,
-      player2: p2,
-      score1: 10,
-      score2: 7,
+      competitors: [p1, p2],
+      scores: [10, 7],
     );
 
     const m2 = MatchModel(
@@ -89,10 +123,8 @@ void main() {
       label: 'Semi 2',
       table: 'T2',
       time: '15:30',
-      player1: p3,
-      player2: p4,
-      score1: 5,
-      score2: 10,
+      competitors: [p3, p4],
+      scores: [5, 10],
     );
 
     const grandFinal = MatchModel(
@@ -100,10 +132,8 @@ void main() {
       label: 'Championship Match',
       table: 'T1',
       time: '18:00',
-      player1: Player(name: 'Finalist 1', flag: '🇪🇸'),
-      player2: Player(name: 'Finalist 2', flag: '🇩🇪'),
-      score1: 11,
-      score2: 9,
+      competitors: [Player(name: 'Finalist 1', flag: '🇪🇸'), Player(name: 'Finalist 2', flag: '🇩🇪')],
+      scores: [11, 9],
     );
 
     final List<List<MatchModel>> singleBranchRounds = [
@@ -123,9 +153,9 @@ void main() {
             roundTitles: roundTitles,
             tabBuilder: tabBuilder,
             hasWinner: (m) => m.hasWinner,
-            getWinnerName: (m) => m.winner.name,
-            getPlayer1Name: (m) => m.player1.name,
-            getPlayer2Name: (m) => m.player2.name,
+            getWinnerName: (m) => m.winner?.name ?? '',
+            getPlayer1Name: (m) => m.competitors.isNotEmpty ? m.competitors.first.name : '',
+            getPlayer2Name: (m) => m.competitors.length > 1 ? m.competitors.last.name : '',
             itemBuilder: (context, match) {
               return SizedBox(
                 key: ValueKey('match-${match.id}'),
@@ -135,9 +165,9 @@ void main() {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(match.player1.name),
+                      Text(match.competitors.isNotEmpty ? match.competitors.first.name : ''),
                       Text('vs'),
-                      Text(match.player2.name),
+                      Text(match.competitors.length > 1 ? match.competitors.last.name : ''),
                     ],
                   ),
                 ),

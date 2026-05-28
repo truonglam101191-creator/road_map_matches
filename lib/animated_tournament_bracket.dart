@@ -27,15 +27,13 @@ class Player {
 }
 
 /// Convenience model representing a match in a tournament (can be used as a default).
-class MatchModel {
+class MatchModel<P> {
   final int id;
   final String label;
   final String table;
   final String time;
-  final Player player1;
-  final Player player2;
-  final int score1;
-  final int score2;
+  final List<P> competitors;
+  final List<int> scores;
   final MatchStatus status; // Match execution status
 
   const MatchModel({
@@ -43,24 +41,48 @@ class MatchModel {
     required this.label,
     required this.table,
     required this.time,
-    required this.player1,
-    required this.player2,
-    required this.score1,
-    required this.score2,
+    required this.competitors,
+    required this.scores,
     this.status = MatchStatus.scheduled,
   });
 
-  bool get hasWinner =>
-      status == MatchStatus.completed ||
-      score1 != 0 ||
-      score2 != 0 ||
-      player1.isWalkOver ||
-      player2.isWalkOver;
+  bool get hasWinner {
+    if (status == MatchStatus.completed) return true;
+    if (scores.length >= 2 && (scores[0] != 0 || scores[1] != 0)) return true;
+    for (final competitor in competitors) {
+      if (_isWalkOver(competitor)) return true;
+    }
+    return false;
+  }
 
-  Player get winner {
-    if (player1.isWalkOver && !player2.isWalkOver) return player2;
-    if (player2.isWalkOver && !player1.isWalkOver) return player1;
-    return score1 >= score2 ? player1 : player2;
+  P? get winner {
+    if (competitors.isEmpty) return null;
+    if (competitors.length == 1) return competitors[0];
+
+    final competitor1 = competitors[0];
+    final competitor2 = competitors[1];
+
+    if (_isWalkOver(competitor1) && !_isWalkOver(competitor2)) {
+      return competitor2;
+    }
+    if (_isWalkOver(competitor2) && !_isWalkOver(competitor1)) {
+      return competitor1;
+    }
+
+    final score1 = scores.isNotEmpty ? scores[0] : 0;
+    final score2 = scores.length > 1 ? scores[1] : 0;
+
+    return score1 >= score2 ? competitor1 : competitor2;
+  }
+
+  static bool _isWalkOver(dynamic p) {
+    if (p == null) return false;
+    if (p is Player) return p.isWalkOver;
+    try {
+      return (p as dynamic).isWalkOver == true;
+    } catch (_) {
+      return false;
+    }
   }
 }
 
