@@ -1,3 +1,12 @@
+## 1.1.0
+
+* Added `ConnectorLineType` enum supporting `solid` (default) and `flowing` (animated moving dashes) connection styles.
+* Optimized dash-flowing phase shifting to run monotonically forward-only (left-to-right) without reversing or rocking back/forth.
+* Added `searchHighlightQuery` supporting real-time competitor search and highlight trail. Connected paths for matched competitors automatically highlight using the custom `accentColor` (defaults to Gold `#FFB300`).
+* Added dynamic flowing dash customizations: `dashLength` (defaults to `12.0`), `dashGap` (defaults to `8.0`), and `dashSpeedMultiplier` (defaults to `1.0`).
+* Fully updated Settings Panel in the example app with dynamic Height animation transition, input text field for searching, and slider controls for dash styling.
+* Formatted all source files using standard format rules.
+
 ## 1.0.0
 
 * Initial release of `road_map`.
