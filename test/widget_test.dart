@@ -106,6 +106,58 @@ void main() {
     });
   });
 
+  group('TournamentDrawEngine Unit Tests', () {
+    test('generateSeedingOrder seeding math matches expectations', () {
+      expect(TournamentDrawEngine.generateSeedingOrder(2), [1, 2]);
+      expect(TournamentDrawEngine.generateSeedingOrder(4), [1, 4, 3, 2]);
+      expect(TournamentDrawEngine.generateSeedingOrder(8), [1, 8, 5, 4, 3, 6, 7, 2]);
+    });
+
+    test('calculateByes returns correct values', () {
+      expect(TournamentDrawEngine.calculateByes(8), 0);
+      expect(TournamentDrawEngine.calculateByes(7), 1);
+      expect(TournamentDrawEngine.calculateByes(5), 3);
+      expect(TournamentDrawEngine.calculateByes(12), 4);
+    });
+
+    test('buildInitialBracket generates valid tournament structures', () {
+      final List<Player> players = List.generate(
+        12,
+        (i) => Player(name: 'Player ${i + 1}', flag: '🇻🇳'),
+      );
+
+      final rounds = TournamentDrawEngine.buildInitialBracket<Player>(
+        players: players,
+        matchLabelPrefix: 'Match ',
+      );
+
+      // 12 players requires a bracket of size 16 (8 matches in round 1)
+      expect(rounds.length, 4); // 8 -> 4 -> 2 -> 1 matches per round: 4 rounds
+      expect(rounds[0].length, 8); // Round 1 has 8 matches
+      expect(rounds[1].length, 4); // Round 2 has 4 matches
+      expect(rounds[2].length, 2); // Round 3 has 2 matches
+      expect(rounds[3].length, 1); // Round 4 has 1 match
+    });
+
+    test('buildInitialBracket with includeFinal: false stops at semifinals', () {
+      final List<Player> players = List.generate(
+        12,
+        (i) => Player(name: 'Player ${i + 1}', flag: '🇻🇳'),
+      );
+
+      final rounds = TournamentDrawEngine.buildInitialBracket<Player>(
+        players: players,
+        matchLabelPrefix: 'Match ',
+        includeFinal: false,
+      );
+
+      expect(rounds.length, 3); // 8 -> 4 -> 2 matches per round: 3 rounds
+      expect(rounds[0].length, 8); // Round 1 has 8 matches
+      expect(rounds[1].length, 4); // Round 2 has 4 matches
+      expect(rounds[2].length, 2); // Round 3 has 2 matches (Semifinals)
+    });
+  });
+
   group('AnimatedTournamentBracket Widget Tests', () {
     // Dummy Data Setup
     const p1 = Player(name: 'David Alcaide', flag: '🇪🇸');

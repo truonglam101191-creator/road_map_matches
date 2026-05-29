@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'examples/draw_engine_and_zoom_example.dart';
 import 'examples/interactive_demo_example.dart';
 import 'examples/double_elimination_example.dart';
 import 'examples/light_theme_example.dart';
@@ -75,6 +76,18 @@ class DashboardScreen extends StatelessWidget {
                     child: ListView(
                       physics: const BouncingScrollPhysics(),
                       children: [
+                        _buildExampleCard(
+                          context,
+                          title: 'Draw Engine & 2D Zoom Map',
+                          desc:
+                              'Tự động bốc thăm hạt giống/BYE. Hỗ trợ xem sơ đồ thu phóng/pan 2D cực rộng, tích hợp check-in, Walkover, Dispute và tự động đẩy đấu thủ vào vòng sau.',
+                          icon: Icons.grid_view_rounded,
+                          gradientColors: [
+                            const Color(0xFF10B981),
+                            const Color(0xFF00E5FF),
+                          ],
+                          screen: const DrawEngineAndZoomExample(),
+                        ),
                         _buildExampleCard(
                           context,
                           title: 'Interactive Bracket Customize',

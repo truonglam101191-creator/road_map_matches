@@ -3,7 +3,7 @@
 A premium, responsive, and highly customizable generic tournament bracket (road map) library for Flutter. It supports dynamic infinite rounds, interactive swipe navigation, customizable branch layouts, and high-performance glowing victory connection lines.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/truonglam101191-creator/road_map_matches/main/screenshots/demo.gif" alt="Interactive Swipe & Tab Navigation Demo" width="300" />
+  <img src="https://raw.githubusercontent.com/truonglam101191-creator/road_map_matches/main/screenshots/demo.png" alt="Interactive Swipe & Tab Navigation Demo" width="300" />
   <img src="https://raw.githubusercontent.com/truonglam101191-creator/road_map_matches/main/screenshots/demo1.png" alt="Light/Dark Premium Themes" width="300" />
 </p>
 
@@ -35,6 +35,11 @@ A premium, responsive, and highly customizable generic tournament bracket (road 
 
 - 🏆 **Generic Type Support**: Works with any custom match model `T` by passing simple getter callbacks.
 - 💫 **Glowing Victory Connectors**: Draws orthogonal connection lines between rounds with configurable active/inactive state and glowing highlight paths.
+- 🗺️ **2D Zoom & Pan Interactive View**: Smoothly pan, zoom, and navigate the entire tournament bracket using `InteractiveViewer` with a toggle mode button.
+- 🎴 **Premium Match Card built-in**: Use the premium glassmorphic `PremiumMatchCard` out-of-the-box, supporting Live score badge, QR check-in status, ELO info, and walkthrough warnings.
+- 🥉 **Third-Place Match**: Easy support for Third-Place (Bronze) matches rendered cleanly and aligned underneath the Grand Final.
+- 🔒 **Dispute Branch Freezing**: Automatically turns connection lines into striped caution tapes with an exclamation badge (`!`) when a match is in a dispute state.
+- 🧩 **Tournament Draw Engine**: Includes a symmetric seeding and automatic BYE allocation utility (`TournamentDrawEngine`) to construct bracket trees programmatically.
 - 📱 **Interactive Swipe & Tab Navigation**: Swipe horizontally or tap tabs with premium sliding indicator to navigate rounds effortlessly.
 - ⚡ **Highly Customizable**: Complete control over round tab labels, theme colors, connector corner radius, and match card widgets.
 - 🎨 **Adaptive Layout**: Smoothly morphs vertical alignments to support infinite rounds without overflow.
@@ -47,7 +52,7 @@ Add `road_map` to your `pubspec.yaml` dependencies:
 
 ```yaml
 dependencies:
-  road_map: ^1.0.0
+  road_map: ^1.2.0
 ```
 
 Then run:
@@ -86,57 +91,116 @@ class MyMatch {
 
 ### 2. Implement the Widget
 
+Here is how to set up the bracket using `TournamentDrawEngine` to generate matches, `PremiumMatchCard` to render the cards, and the interactive zoom/pan view:
+
 ```dart
 import 'package:flutter/material.dart';
 import 'package:road_map/road_map.dart';
 
-class TournamentBracketScreen extends StatelessWidget {
+class TournamentBracketScreen extends StatefulWidget {
+  const TournamentBracketScreen({super.key});
+
   @override
-  Widget build(BuildContext context) {
-    // 4 rounds of matches for Branch 1
-    final List<List<MyMatch>> branch1 = [
-      [/* Round 1 Matches */],
-      [/* Round 2 Matches */],
-      [/* Round 3 Matches */],
-      [/* Round 4 Matches */],
+  State<TournamentBracketScreen> createState() => _TournamentBracketScreenState();
+}
+
+class _TournamentBracketScreenState extends State<TournamentBracketScreen> {
+  late List<List<MatchModel<Player>>> _rounds;
+  MatchModel<Player>? _grandFinal;
+  MatchModel<Player>? _thirdPlaceMatch;
+
+  @override
+  void initState() {
+    super.initState();
+    _generateBracket();
+  }
+
+  void _generateBracket() {
+    // 1. Prepare players list (with optional seeding and check-in status)
+    final List<Player> players = [
+      Player(name: 'Nguyễn Văn A', flag: '⭐️', isCheckedIn: true),
+      Player(name: 'Trần Thị B', flag: '⭐️', isCheckedIn: true),
+      Player(name: 'Lê Hoàng C', flag: '👤'),
+      Player(name: 'Phạm Minh D', flag: '👤'),
+      Player(name: 'Hoàng Anh E', flag: '👤'),
+      Player(name: 'Vũ Đức F', flag: '👤'),
+      Player(name: 'Ngô Quốc G', flag: '👤'),
+      Player(name: 'Đặng Thanh H', flag: '👤'),
     ];
 
-    final MyMatch grandFinal = MyMatch(
-      id: 99,
-      label: 'Grand Final',
-      player1: 'Player A',
-      player2: 'Player B',
+    // 2. Build rounds using TournamentDrawEngine (BYE matches will be allocated automatically)
+    final generatedRounds = TournamentDrawEngine.buildInitialBracket<Player>(
+      players: players,
+      matchLabelPrefix: 'Match ',
+      includeFinal: false, // Exclude final to handle grand final and third place manually
     );
 
+    setState(() {
+      _rounds = generatedRounds;
+
+      // Initialize Grand Final and Third Place matches
+      _grandFinal = const MatchModel<Player>(
+        id: 100,
+        label: 'Grand Final',
+        table: 'Main Table',
+        time: 'Sunday 20:00',
+        competitors: [],
+        scores: [0, 0],
+        status: MatchStatus.scheduled,
+      );
+
+      _thirdPlaceMatch = const MatchModel<Player>(
+        id: 101,
+        label: 'Third-Place Match',
+        table: 'Table 2',
+        time: 'Sunday 18:00',
+        competitors: [],
+        scores: [0, 0],
+        status: MatchStatus.scheduled,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF070B19),
       body: SafeArea(
-        child: AnimatedTournamentBracket<MyMatch>(
-          branch1Rounds: branch1,
-          grandFinal: grandFinal,
+        child: AnimatedTournamentBracket<MatchModel<Player>>(
+          branch1Rounds: _rounds,
+          grandFinal: _grandFinal,
+          thirdPlaceMatch: _thirdPlaceMatch,
+          
+          // Use the modern 2D pan & zoom viewport by default
+          defaultViewMode: BracketViewMode.interactive2D,
+          showViewModeToggle: true,
 
-          // Callbacks to determine glowing connection lines
-          hasWinner: (match) => match.hasWinner,
-          getWinnerName: (match) => match.winner ?? '',
-          getPlayer1Name: (match) => match.player1,
-          getPlayer2Name: (match) => match.player2,
+          // Map match details and status
+          hasWinner: (m) => m.hasWinner,
+          getWinnerName: (m) => m.winner?.name ?? '',
+          getPlayer1Name: (m) => m.competitors.isNotEmpty ? m.competitors.first.name : '',
+          getPlayer2Name: (m) => m.competitors.length > 1 ? m.competitors.last.name : '',
+          getMatchStatus: (m) => m.status,
 
-          // Build your own custom match cards
+          // Stylings
+          primaryColor: const Color(0xFF0066FF),
+          secondaryColor: const Color(0xFF00E5FF),
+          surfaceColor: const Color(0xFF131A30),
+          backgroundColor: const Color(0xFF070B19),
+          disputeColor: const Color(0xFFFF3366),
+
+          // Build premium glassmorphic cards out of the box
           itemBuilder: (context, match) {
-            return Container(
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Color(0xFF131A30),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white12),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(match.player1, style: TextStyle(color: Colors.white)),
-                  Divider(color: Colors.white10),
-                  Text(match.player2, style: TextStyle(color: Colors.white)),
-                ],
-              ),
+            return PremiumMatchCard(
+              match: match,
+              primaryColor: const Color(0xFF0066FF),
+              secondaryColor: const Color(0xFF00E5FF),
+              surfaceColor: const Color(0xFF131A30),
+              accentColor: const Color(0xFFFFB300),
+              disputeColor: const Color(0xFFFF3366),
+              onTap: () {
+                // Open match score editor, toggle dispute status, or update winners here.
+              },
             );
           },
         ),
@@ -154,6 +218,7 @@ class TournamentBracketScreen extends StatelessWidget {
 |---|---|---|
 | `branch1Rounds` | `List<List<T>>` | Required. List of rounds containing matches of type `T` for the primary branch (e.g. Upper Branch). |
 | `grandFinal` | `T?` | Optional. The ultimate championship match connecting the branch winners. |
+| `thirdPlaceMatch` | `T?` | Optional. The third-place (bronze medal) match positioned cleanly below the grand final. |
 | `itemBuilder` | `Widget Function(BuildContext, T)` | Required. Callback builder to construct your custom match card widgets. |
 | `roundTitles` | `List<String>?` | Optional. Custom names for each round tab (e.g. `['Round 1', 'Quarter-Finals', ...]`). |
 | `tabBuilder` | `Widget Function(BuildContext, int, bool)?` | Optional. Callback to build highly custom tab labels. |
@@ -161,6 +226,10 @@ class TournamentBracketScreen extends StatelessWidget {
 | `getWinnerName` | `String Function(T)?` | Optional. Returns the name of the winning player to highlight the line. |
 | `getPlayer1Name` | `String Function(T)?` | Optional. Returns player 1's name to trace the path. |
 | `getPlayer2Name` | `String Function(T)?` | Optional. Returns player 2's name to trace the path. |
+| `defaultViewMode` | `BracketViewMode` | The default viewing layout mode: `BracketViewMode.swipe` or `BracketViewMode.interactive2D` (Zoom/Pan). Defaults to `BracketViewMode.swipe`. |
+| `showViewModeToggle` | `bool` | Whether to show the floating action button to switch between Swipe and 2D mode. Defaults to `true`. |
+| `getMatchStatus` | `MatchStatus Function(T)?` | Optional. Returns the status of the match (`scheduled`, `inProgress`, `completed`, `dispute`) to control card borders and freezes. |
+| `disputeColor` | `Color` | Highlight color used for disputed caution tapes and warnings. Defaults to `#FF3366`. |
 | `connectorRadius` | `double` | The corner radius of orthogonal connection lines. Defaults to `8.0`. |
 | `primaryColor` | `Color` | Main highlight color for winning paths and indicators. Defaults to `#0066FF`. |
 | `secondaryColor` | `Color` | Accent highlight color. Defaults to `#00E5FF`. |

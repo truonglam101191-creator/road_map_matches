@@ -1,3 +1,14 @@
+## 1.2.0
+
+* Added `TournamentDrawEngine` helper utility for automatic tournament bracket seeding, symmetric seed distributions, and automated BYE slot calculations.
+* Added `includeFinal` option to `TournamentDrawEngine.buildInitialBracket` to easily stop bracket generation at the semifinals stage when Grand Final and Third Place matches are managed separately.
+* Added 2D Zoom & Pan interactive viewing mode (`BracketViewMode.interactive2D`) using `InteractiveViewer`, with a toggle button to switch between page-swipe and interactive 2D map view.
+* Added `PremiumMatchCard` widget featuring check-in status indicators, real-time live match indicator badge, ELO/Rank info display, and walkover / dispute warning styles.
+* Added support for `thirdPlaceMatch` (Bronze Match) card rendering positioned cleanly below the Grand Final.
+* Updated `BracketPainter` to render final round connection lines using the orthogonal curved/sharp style (`ConnectorStyle.curved` or `sharp`) matching the intermediate rounds, keeping them completely clear of the Third Place match card.
+* Added Dispute branch freezing: connection lines coming out of matches in `MatchStatus.dispute` are drawn as warning/caution red dashed tapes with an exclamation mark (!) badge.
+* Added comprehensive unit and widget tests covering draw engine seeding logic, BYE calculations, and structural round generation.
+
 ## 1.1.0
 
 * Added `ConnectorLineType` enum supporting `solid` (default) and `flowing` (animated moving dashes) connection styles.
