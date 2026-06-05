@@ -1,3 +1,10 @@
+## 1.2.1
+
+* Added support for custom gradient background via the new `backgroundGradient` parameter.
+* Added `useGradientBackground` parameter (defaults to `true`) to toggle between the default radial gradient and a solid color background.
+* Made `backgroundColor` nullable (`Color?`), allowing developers to pass `null` to have no background color (making it transparent).
+* Updated layout constraints behavior to ensure that when the number of matches is small (like 2 items or fewer), the bracket remains pinned to the top of the viewport instead of centering vertically in 2D interactive view mode.
+
 ## 1.2.0
 
 * Added `TournamentDrawEngine` helper utility for automatic tournament bracket seeding, symmetric seed distributions, and automated BYE slot calculations.

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
@@ -225,12 +226,15 @@ class BracketPainter<T> extends CustomPainter {
           (flowValue * dashSpeedMultiplier * totalPattern) % totalPattern;
 
       for (final ui.PathMetric metric in path.computeMetrics()) {
-        double length = metric.length;
-        double distance = shift;
+        final double length = metric.length;
+        double distance = shift - totalPattern;
         while (distance < length) {
-          final double end = (distance + dashLength).clamp(0.0, length);
-          final ui.Path segment = metric.extractPath(distance, end);
-          canvas.drawPath(segment, paint);
+          if (distance + dashLength > 0) {
+            final double start = distance.clamp(0.0, length);
+            final double end = (distance + dashLength).clamp(0.0, length);
+            final ui.Path segment = metric.extractPath(start, end);
+            canvas.drawPath(segment, paint);
+          }
           distance += totalPattern;
         }
       }
@@ -954,7 +958,9 @@ class AnimatedTournamentBracket<T> extends StatefulWidget {
   /// Design system theme colors
   final Color primaryColor;
   final Color secondaryColor;
-  final Color backgroundColor;
+  final Color? backgroundColor;
+  final Gradient? backgroundGradient;
+  final bool useGradientBackground;
   final Color surfaceColor;
   final Color accentColor;
   final Color defaultLineColor;
@@ -1023,6 +1029,9 @@ class AnimatedTournamentBracket<T> extends StatefulWidget {
   /// Color used for disputed match connection lines
   final Color disputeColor;
 
+  /// Custom top padding above the tab bar. Defaults to 12.0.
+  final double tabBarTopPadding;
+
   const AnimatedTournamentBracket({
     super.key,
     required this.branch1Rounds,
@@ -1039,6 +1048,8 @@ class AnimatedTournamentBracket<T> extends StatefulWidget {
     this.primaryColor = const Color(0xFF0066FF),
     this.secondaryColor = const Color(0xFF00E5FF),
     this.backgroundColor = const Color(0xFF070B19),
+    this.backgroundGradient,
+    this.useGradientBackground = true,
     this.surfaceColor = const Color(0xFF131A30),
     this.accentColor = const Color(0xFFFFB300),
     this.defaultLineColor = const Color(0x33FFFFFF),
@@ -1071,6 +1082,7 @@ class AnimatedTournamentBracket<T> extends StatefulWidget {
     this.showViewModeToggle = true,
     this.getMatchStatus,
     this.disputeColor = const Color(0xFFFF3366),
+    this.tabBarTopPadding = 12.0,
   });
 
   @override
@@ -1233,28 +1245,41 @@ class _AnimatedTournamentBracketState<T>
 
     return Stack(
       children: [
-        // Background Gradient
-        Positioned.fill(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(0.0, -0.5),
-                radius: 1.2,
-                colors: [
-                  widget.backgroundColor.withValues(alpha: 0.85),
-                  widget.backgroundColor,
-                ],
-              ),
+        // Background
+        if (widget.backgroundGradient != null)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(gradient: widget.backgroundGradient),
+            ),
+          )
+        else if (widget.backgroundColor != null &&
+            widget.backgroundColor != Colors.transparent)
+          Positioned.fill(
+            child: Container(
+              decoration: widget.useGradientBackground
+                  ? BoxDecoration(
+                      gradient: RadialGradient(
+                        center: const Alignment(0.0, -0.5),
+                        radius: 1.2,
+                        colors: [
+                          widget.backgroundColor!.withValues(alpha: 0.85),
+                          widget.backgroundColor!,
+                        ],
+                      ),
+                    )
+                  : null,
+              color: widget.useGradientBackground
+                  ? null
+                  : widget.backgroundColor,
             ),
           ),
-        ),
 
         // Main bracket screen contents
         SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 12),
+              SizedBox(height: widget.tabBarTopPadding),
               if (_viewMode == BracketViewMode.swipe)
                 widget.tabBarBuilder != null
                     ? widget.tabBarBuilder!(
@@ -1324,10 +1349,15 @@ class _AnimatedTournamentBracketState<T>
                       return ui.lerpDouble(heights[i], heights[i + 1], t)!;
                     }
 
-                    final double canvasHeight =
+                    final double contentHeight =
                         _viewMode == BracketViewMode.interactive2D
                         ? heights[0] + 80
                         : getActiveContentHeight(_pageOffset);
+
+                    final double canvasHeight = math.max(
+                      contentHeight,
+                      constraints.maxHeight,
+                    );
 
                     final double screenPadding =
                         (constraints.maxWidth - cardWidth) / 2;
@@ -1630,10 +1660,7 @@ class _AnimatedTournamentBracketState<T>
                                 ? _pulseController.value
                                 : 0.0,
                             flowValue: widget.pulseGlow
-                                ? (_pulseController.status ==
-                                          AnimationStatus.reverse
-                                      ? 2.0 - _pulseController.value
-                                      : _pulseController.value)
+                                ? DateTime.now().millisecondsSinceEpoch / 1000.0
                                 : 0.0,
                             useLineGradients: widget.useLineGradients,
                             hasWinner: widget.hasWinner,

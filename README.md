@@ -42,7 +42,7 @@ A premium, responsive, and highly customizable generic tournament bracket (road 
 - 🧩 **Tournament Draw Engine**: Includes a symmetric seeding and automatic BYE allocation utility (`TournamentDrawEngine`) to construct bracket trees programmatically.
 - 📱 **Interactive Swipe & Tab Navigation**: Swipe horizontally or tap tabs with premium sliding indicator to navigate rounds effortlessly.
 - ⚡ **Highly Customizable**: Complete control over round tab labels, theme colors, connector corner radius, and match card widgets.
-- 🎨 **Adaptive Layout**: Smoothly morphs vertical alignments to support infinite rounds without overflow.
+- 🎨 **Adaptive Layout**: Smoothly morphs vertical alignments to support infinite rounds without overflow. For smaller brackets (e.g. 2 items or fewer), the bracket is automatically aligned to the top of the viewport to maintain a clean structure.
 
 ---
 
@@ -52,7 +52,7 @@ Add `road_map` to your `pubspec.yaml` dependencies:
 
 ```yaml
 dependencies:
-  road_map: ^1.2.0
+  road_map: ^1.2.1
 ```
 
 Then run:
@@ -186,7 +186,9 @@ class _TournamentBracketScreenState extends State<TournamentBracketScreen> {
           primaryColor: const Color(0xFF0066FF),
           secondaryColor: const Color(0xFF00E5FF),
           surfaceColor: const Color(0xFF131A30),
-          backgroundColor: const Color(0xFF070B19),
+          backgroundColor: const Color(0xFF070B19), // Set to null for a transparent background
+          useGradientBackground: true, // Set to false to render backgroundColor as a solid color
+          // backgroundGradient: const RadialGradient(...), // Optional custom background gradient
           disputeColor: const Color(0xFFFF3366),
 
           // Build premium glassmorphic cards out of the box
@@ -233,7 +235,9 @@ class _TournamentBracketScreenState extends State<TournamentBracketScreen> {
 | `connectorRadius` | `double` | The corner radius of orthogonal connection lines. Defaults to `8.0`. |
 | `primaryColor` | `Color` | Main highlight color for winning paths and indicators. Defaults to `#0066FF`. |
 | `secondaryColor` | `Color` | Accent highlight color. Defaults to `#00E5FF`. |
-| `backgroundColor` | `Color` | Overall background gradient starting color. Defaults to `#070B19`. |
+| `backgroundColor` | `Color?` | Overall background color. If null (and `backgroundGradient` is null), no background is painted (transparent). Defaults to `#070B19`. |
+| `backgroundGradient` | `Gradient?` | Optional custom background gradient. Overrides `backgroundColor` if set. |
+| `useGradientBackground` | `bool` | Whether to render the `backgroundColor` as a premium radial gradient. If false, renders as a solid color. Defaults to `true`. |
 | `surfaceColor` | `Color` | Tab bar background fill color. Defaults to `#131A30`. |
 | `cardWidth` | `double?` | Custom card width (defaults to dynamic calculation if null). |
 | `cardHeight` | `double?` | Custom card height (defaults to dynamic calculation if null). |

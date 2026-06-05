@@ -138,6 +138,7 @@ class _DoubleEliminationExampleState extends State<DoubleEliminationExample> {
               primaryColor: _activeBracketTab == 0
                   ? const Color(0xFF0066FF)
                   : const Color(0xFF00E5FF),
+
               secondaryColor: const Color(0xFFFFB300),
               backgroundColor: const Color(0xFF0D0E15),
               surfaceColor: const Color(0xFF1B1D2A),
